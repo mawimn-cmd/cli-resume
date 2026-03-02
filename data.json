@@ -15,25 +15,25 @@
       "role": "Delivery Manager",
       "company": "Delivery Hero",
       "period": "2022 – 2023",
-      "location": ""
+      "location": "Berlin"
     },
     {
       "role": "Project Manager",
       "company": "Zalando",
       "period": "2021 – 2022",
-      "location": ""
+      "location": "berlin"
     },
     {
       "role": "Technical Project Manager",
       "company": "adidas",
       "period": "2019 – 2020",
-      "location": ""
+      "location": "Erlangen"
     },
     {
       "role": "Project Manager",
       "company": "Cognizant | Tata Consultancy Services",
       "period": "2013 – 2017",
-      "location": ""
+      "location": "India"
     }
   ],
   "projects": [],
@@ -54,8 +54,7 @@
       "SQL",
       "Jira",
       "ADO",
-      "Notion",
-      "Confluence"
+      "Notion"
     ]
   },
   "education": [
@@ -115,7 +114,7 @@
         "improve",
         "constructive"
       ],
-      "answer": "I would put myself in other's shoe and would try to think from their perspective why was the feedback provided, ask clarifying questions and make a plan to address the gap or how to handle the root cause of the perspection"
+      "answer": "I would put myself in other's shoe and would try to think from their perspective why was the feedback provided, ask clarifying questions and make a plan to address the gap"
     },
     {
       "question": "How do you prioritize work?",
@@ -131,6 +130,18 @@
       "answer": "Prioritize work  that would affect the key KPIS. Delegate where possible."
     },
     {
+      "question": "How do you handle conflict?",
+      "keywords": [
+        "conflict",
+        "disagree",
+        "disagreement",
+        "argument",
+        "tension",
+        "difficult"
+      ],
+      "answer": "Conflict is an another opportunity to align better"
+    },
+    {
       "question": "What are your long-term career goals?",
       "keywords": [
         "goals",
@@ -142,7 +153,7 @@
         "aspiration",
         "vision"
       ],
-      "answer": "Work on interesting AI products/projects that contribute to solving genuine problem"
+      "answer": "Work on interesting AI products/projects that contribute to solving genuine problems"
     }
   ],
   "geminiApiKey": "QUl6YVN5QlppckxLMGh4Qi1PTUpRLWp2elk5dDRzWFpwVHpmX0VZ"
