@@ -817,7 +817,7 @@
   <div id="chat-panel">
     <div class="chat-header">
       <h2 id="chat-header-title">Chat</h2>
-      <p id="chat-header-subtitle">Ask me anything about my experience</p>
+      <p id="chat-header-subtitle">Some answers may be synthesized by AI from resume data</p>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input-area">
@@ -836,7 +836,7 @@
   <div class="sheet-handle-bar" id="sheet-close"><div class="handle"></div></div>
   <div class="chat-header">
     <h2 id="chat-header-title-mobile">Chat</h2>
-    <p id="chat-header-subtitle-mobile">Ask me anything about my experience</p>
+    <p id="chat-header-subtitle-mobile">Some answers may be synthesized by AI from resume data</p>
   </div>
   <div class="chat-messages" id="chat-messages-mobile"></div>
   <div class="chat-input-area">
@@ -894,9 +894,9 @@ function onDataLoaded() {
 
   // Dynamic chat headers
   document.getElementById('chat-header-title').textContent = `Chat with ${firstName}`;
-  document.getElementById('chat-header-subtitle').textContent = 'Ask me anything about my experience';
+  document.getElementById('chat-header-subtitle').textContent = 'Some answers may be synthesized by AI from resume data';
   document.getElementById('chat-header-title-mobile').textContent = `Chat with ${firstName}`;
-  document.getElementById('chat-header-subtitle-mobile').textContent = 'Ask me anything about my experience';
+  document.getElementById('chat-header-subtitle-mobile').textContent = 'Some answers may be synthesized by AI from resume data';
 
   // Render + boot
   renderResume();
