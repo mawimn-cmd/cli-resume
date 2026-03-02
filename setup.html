@@ -757,15 +757,93 @@ function readFileAsText(file) {
   });
 }
 
-function getFileMimeType(file) {
-  const ext = file.name.split('.').pop().toLowerCase();
-  const mimeMap = {
-    pdf: 'application/pdf',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    txt: 'text/plain'
-  };
-  return mimeMap[ext] || file.type || 'application/octet-stream';
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// Extract text from DOCX (which is a ZIP containing XML)
+async function extractDocxText(file) {
+  const arrayBuffer = await readFileAsArrayBuffer(file);
+  const uint8 = new Uint8Array(arrayBuffer);
+
+  // Find document.xml inside the ZIP by locating its local file header
+  // DOCX stores main content in word/document.xml
+  const decoder = new TextDecoder();
+  const fullText = decoder.decode(uint8);
+
+  // Find the XML content between word/document.xml markers
+  const docXmlStart = fullText.indexOf('word/document.xml');
+  if (docXmlStart === -1) throw new Error('Could not read DOCX file. Try saving as PDF or pasting the text.');
+
+  // Use a simpler approach: read the whole file as binary string,
+  // find the XML content, and strip tags
+  const blob = new Blob([arrayBuffer]);
+  const zip = await readZipEntry(arrayBuffer, 'word/document.xml');
+  return zip;
+}
+
+// Minimal ZIP reader — extracts a single file entry by name
+async function readZipEntry(buffer, targetName) {
+  const bytes = new Uint8Array(buffer);
+  const decoder = new TextDecoder();
+  let offset = 0;
+
+  while (offset < bytes.length - 4) {
+    // Local file header signature: PK\x03\x04
+    if (bytes[offset] !== 0x50 || bytes[offset+1] !== 0x4B ||
+        bytes[offset+2] !== 0x03 || bytes[offset+3] !== 0x04) {
+      break;
+    }
+
+    const compressionMethod = bytes[offset+8] | (bytes[offset+9] << 8);
+    const compressedSize = bytes[offset+18] | (bytes[offset+19] << 8) | (bytes[offset+20] << 16) | (bytes[offset+21] << 24);
+    const uncompressedSize = bytes[offset+22] | (bytes[offset+23] << 8) | (bytes[offset+24] << 16) | (bytes[offset+25] << 24);
+    const nameLen = bytes[offset+26] | (bytes[offset+27] << 8);
+    const extraLen = bytes[offset+28] | (bytes[offset+29] << 8);
+    const fileName = decoder.decode(bytes.slice(offset+30, offset+30+nameLen));
+    const dataStart = offset + 30 + nameLen + extraLen;
+
+    if (fileName === targetName) {
+      const rawData = bytes.slice(dataStart, dataStart + compressedSize);
+
+      if (compressionMethod === 0) {
+        // Stored (no compression)
+        const xml = decoder.decode(rawData);
+        return xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      } else if (compressionMethod === 8) {
+        // Deflate — use DecompressionStream API
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(rawData);
+        writer.close();
+        const reader = ds.readable.getReader();
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+        const decompressed = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+        let pos = 0;
+        for (const chunk of chunks) { decompressed.set(chunk, pos); pos += chunk.length; }
+        const xml = decoder.decode(decompressed);
+        return xml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      }
+    }
+
+    offset = dataStart + compressedSize;
+  }
+
+  throw new Error('Could not extract text from DOCX. Try saving as PDF or pasting the text.');
+}
+
+function getFileExt(file) {
+  return file.name.split('.').pop().toLowerCase();
 }
 
 // ============================================================
@@ -828,17 +906,21 @@ async function parseResume() {
     const parts = [];
 
     if (uploadedFile) {
-      const mimeType = getFileMimeType(uploadedFile);
+      const ext = getFileExt(uploadedFile);
 
-      if (mimeType === 'text/plain') {
-        // Plain text: read and send as text
-        const text = await readFileAsText(uploadedFile);
+      if (ext === 'pdf') {
+        // PDF: send as inline_data (Gemini supports natively)
+        const base64 = await readFileAsBase64(uploadedFile);
+        parts.push({ inline_data: { mime_type: 'application/pdf', data: base64 } });
+        parts.push({ text: PARSE_PROMPT });
+      } else if (ext === 'docx') {
+        // DOCX: extract text client-side, then send as text
+        const text = await extractDocxText(uploadedFile);
         parts.push({ text: PARSE_PROMPT + '\n\nResume:\n---\n' + text + '\n---' });
       } else {
-        // PDF/DOC/DOCX: send as inline_data for Gemini to process
-        const base64 = await readFileAsBase64(uploadedFile);
-        parts.push({ inline_data: { mime_type: mimeType, data: base64 } });
-        parts.push({ text: PARSE_PROMPT });
+        // TXT / DOC / other: read as text
+        const text = await readFileAsText(uploadedFile);
+        parts.push({ text: PARSE_PROMPT + '\n\nResume:\n---\n' + text + '\n---' });
       }
     } else {
       // Pasted text
