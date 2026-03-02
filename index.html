@@ -867,14 +867,10 @@ function escapeHTML(str) {
 // ============================================================
 async function loadData() {
   try {
-    console.log('[CLI Resume] Fetching data.json...');
     const resp = await fetch('data.json');
-    console.log('[CLI Resume] Fetch status:', resp.status);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     RESUME_DATA = await resp.json();
-    console.log('[CLI Resume] Data loaded:', RESUME_DATA.name);
   } catch (e) {
-    console.error('[CLI Resume] Failed to load data:', e);
     showSetupScreen();
     return;
   }
@@ -1035,14 +1031,15 @@ function renderResume() {
   `;
 
   // — Experience
-  let expHTML = d.experience.map((exp, i) => {
-    const bullets = exp.bullets.map(b => `<li>${escapeHTML(b)}</li>`).join('');
+  let expHTML = (d.experience || []).map((exp, i) => {
+    const bullets = (exp.bullets || []).map(b => `<li>${escapeHTML(b)}</li>`).join('');
     const divider = i < d.experience.length - 1 ? '<hr class="exp-divider">' : '';
+    const metaParts = [exp.company, exp.period, exp.location].filter(Boolean).map(s => escapeHTML(s));
     return `
       <div class="exp-entry">
-        <div class="exp-role">${escapeHTML(exp.role)}</div>
-        <div class="exp-meta">${escapeHTML(exp.company)} · ${escapeHTML(exp.period)} · ${escapeHTML(exp.location)}</div>
-        <ul class="exp-bullets">${bullets}</ul>
+        <div class="exp-role">${escapeHTML(exp.role || '')}</div>
+        <div class="exp-meta">${metaParts.join(' · ')}</div>
+        ${bullets ? `<ul class="exp-bullets">${bullets}</ul>` : ''}
       </div>
       ${divider}
     `;
@@ -1055,27 +1052,29 @@ function renderResume() {
     </div>
   `;
 
-  // — Projects
-  let projHTML = d.projects.map((proj, i) => {
-    const tags = proj.tech.split(',').map(t => `<span class="tech-tag">${escapeHTML(t.trim())}</span>`).join('');
-    const divider = i < d.projects.length - 1 ? '<hr class="exp-divider">' : '';
-    return `
-      <div class="proj-entry">
-        <div class="proj-name">${escapeHTML(proj.name)}</div>
-        <div class="proj-desc">${escapeHTML(proj.description)}</div>
-        <div class="proj-tech">${tags}</div>
-        ${proj.url ? `<a class="proj-link" href="${proj.url}" target="_blank" rel="noopener">→ ${proj.url}</a>` : ''}
-      </div>
-      ${divider}
-    `;
-  }).join('');
+  // — Projects (skip if empty)
+  if (d.projects && d.projects.length > 0) {
+    let projHTML = d.projects.map((proj, i) => {
+      const tags = proj.tech ? proj.tech.split(',').map(t => `<span class="tech-tag">${escapeHTML(t.trim())}</span>`).join('') : '';
+      const divider = i < d.projects.length - 1 ? '<hr class="exp-divider">' : '';
+      return `
+        <div class="proj-entry">
+          <div class="proj-name">${escapeHTML(proj.name || '')}</div>
+          <div class="proj-desc">${escapeHTML(proj.description || '')}</div>
+          ${tags ? `<div class="proj-tech">${tags}</div>` : ''}
+          ${proj.url ? `<a class="proj-link" href="${proj.url}" target="_blank" rel="noopener">→ ${proj.url}</a>` : ''}
+        </div>
+        ${divider}
+      `;
+    }).join('');
 
-  container.innerHTML += `
-    <div class="section-card">
-      <div class="section-card-header"><span class="section-icon">◈</span> Projects</div>
-      ${projHTML}
-    </div>
-  `;
+    container.innerHTML += `
+      <div class="section-card">
+        <div class="section-card-header"><span class="section-icon">◈</span> Projects</div>
+        ${projHTML}
+      </div>
+    `;
+  }
 
   // — Skills
   let skillsHTML = Object.entries(d.skills).map(([cat, items]) => {
@@ -1096,13 +1095,16 @@ function renderResume() {
   `;
 
   // — Education
-  let eduHTML = d.education.map(edu => `
+  let eduHTML = (d.education || []).map(edu => {
+    const metaParts = [edu.school, edu.period].filter(Boolean).map(s => escapeHTML(s));
+    return `
     <div>
-      <div class="edu-degree">${escapeHTML(edu.degree)}</div>
-      <div class="edu-meta">${escapeHTML(edu.school)} · ${escapeHTML(edu.period)}</div>
+      <div class="edu-degree">${escapeHTML(edu.degree || '')}</div>
+      ${metaParts.length ? `<div class="edu-meta">${metaParts.join(' · ')}</div>` : ''}
       ${edu.details ? `<div class="edu-details">${escapeHTML(edu.details)}</div>` : ''}
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   container.innerHTML += `
     <div class="section-card">
