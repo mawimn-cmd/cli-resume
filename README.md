@@ -9,7 +9,7 @@ Zero dependencies. One file. Fully static.
 1. **Fork** this repository
 2. **Open** `setup.html` in your browser
 3. **Paste** your resume text + free Gemini API key
-4. **Answer** 20 common interview questions (in your own words)
+4. **Answer** 10 common interview questions (in your own words)
 5. **Deploy** directly to your repo — or download `data.json`
 6. **Enable GitHub Pages**: Settings → Pages → main branch → Save
 7. **Share** your link: `https://username.github.io/cli-resume`
