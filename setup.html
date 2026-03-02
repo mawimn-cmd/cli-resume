@@ -158,6 +158,66 @@
 
     .help-link:hover { color: var(--purple); }
 
+    /* File upload zone */
+    .file-upload-zone {
+      border: 2px dashed rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      padding: 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 16px;
+    }
+
+    .file-upload-zone:hover, .file-upload-zone.dragover {
+      border-color: var(--purple);
+      background: rgba(168, 85, 247, 0.05);
+    }
+
+    .file-upload-zone .upload-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .file-upload-zone .upload-text {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .file-upload-zone .upload-text span {
+      color: var(--purple);
+      font-weight: 700;
+    }
+
+    .file-upload-zone .upload-formats {
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 4px;
+      opacity: 0.7;
+    }
+
+    .file-upload-zone .file-selected {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(148, 163, 184, 0.15);
+    }
+
     .note-text {
       color: var(--text-muted);
       font-size: 12px;
@@ -412,8 +472,18 @@
        STEP 1: Resume Input
        ============================================================ -->
   <div class="step active" id="step-0">
-    <div class="step-title">Step 1: Paste Your Resume</div>
-    <div class="step-desc">Paste your resume text below. The AI will extract structured data from it.</div>
+    <div class="step-title">Step 1: Upload Your Resume</div>
+    <div class="step-desc">Upload a file or paste your resume text. The AI will extract structured data from it.</div>
+
+    <label>Upload resume file</label>
+    <div class="file-upload-zone" id="file-upload-zone">
+      <input type="file" id="resume-file" accept=".pdf,.txt,.doc,.docx" style="display:none">
+      <div class="upload-icon">&#128196;</div>
+      <div class="upload-text" id="upload-text"><span>Click to upload</span> or drag and drop</div>
+      <div class="upload-formats">PDF, TXT, DOC, DOCX</div>
+    </div>
+
+    <div class="or-divider">or paste text manually</div>
 
     <label for="resume-text">Resume text</label>
     <textarea id="resume-text" placeholder="Paste your full resume text here..."></textarea>
@@ -635,32 +705,73 @@ function goToStep(n) {
 }
 
 // ============================================================
+// FILE UPLOAD HANDLING
+// ============================================================
+let uploadedFile = null;
+
+const fileUploadZone = document.getElementById('file-upload-zone');
+const fileInput = document.getElementById('resume-file');
+const uploadText = document.getElementById('upload-text');
+
+fileUploadZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length > 0) setUploadedFile(e.target.files[0]);
+});
+
+fileUploadZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  fileUploadZone.classList.add('dragover');
+});
+
+fileUploadZone.addEventListener('dragleave', () => {
+  fileUploadZone.classList.remove('dragover');
+});
+
+fileUploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  fileUploadZone.classList.remove('dragover');
+  if (e.dataTransfer.files.length > 0) setUploadedFile(e.dataTransfer.files[0]);
+});
+
+function setUploadedFile(file) {
+  uploadedFile = file;
+  uploadText.innerHTML = `<span class="file-selected">${escapeHTML(file.name)}</span>`;
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+}
+
+function getFileMimeType(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  const mimeMap = {
+    pdf: 'application/pdf',
+    doc: 'application/msword',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    txt: 'text/plain'
+  };
+  return mimeMap[ext] || file.type || 'application/octet-stream';
+}
+
+// ============================================================
 // STEP 1: Parse Resume with Gemini
 // ============================================================
-async function parseResume() {
-  const resumeText = document.getElementById('resume-text').value.trim();
-  const apiKey = document.getElementById('api-key').value.trim();
-  const errorEl = document.getElementById('step1-error');
-  const btn = document.getElementById('parse-btn');
-
-  errorEl.classList.remove('visible');
-
-  if (!resumeText) {
-    errorEl.textContent = 'Please paste your resume text.';
-    errorEl.classList.add('visible');
-    return;
-  }
-
-  if (!apiKey) {
-    errorEl.textContent = 'Please enter your Gemini API key.';
-    errorEl.classList.add('visible');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Parsing...';
-
-  const prompt = `You are a resume parser. Extract structured data from the resume below.
+const PARSE_PROMPT = `You are a resume parser. Extract structured data from the resume provided.
 
 Return a JSON object with exactly this schema:
 {
@@ -687,21 +798,60 @@ Rules:
 - Group skills into 3-5 logical categories
 - For bio, write in third person perspective
 - Leave contact fields empty string if not found in resume
-- For projects, include any mentioned; leave url empty if not provided
+- For projects, include any mentioned; leave url empty if not provided`;
 
-Resume:
----
-${resumeText}
----`;
+async function parseResume() {
+  const resumeText = document.getElementById('resume-text').value.trim();
+  const apiKey = document.getElementById('api-key').value.trim();
+  const errorEl = document.getElementById('step1-error');
+  const btn = document.getElementById('parse-btn');
+
+  errorEl.classList.remove('visible');
+
+  if (!uploadedFile && !resumeText) {
+    errorEl.textContent = 'Please upload a file or paste your resume text.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  if (!apiKey) {
+    errorEl.textContent = 'Please enter your Gemini API key.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Parsing...';
 
   try {
+    // Build request parts based on input type
+    const parts = [];
+
+    if (uploadedFile) {
+      const mimeType = getFileMimeType(uploadedFile);
+
+      if (mimeType === 'text/plain') {
+        // Plain text: read and send as text
+        const text = await readFileAsText(uploadedFile);
+        parts.push({ text: PARSE_PROMPT + '\n\nResume:\n---\n' + text + '\n---' });
+      } else {
+        // PDF/DOC/DOCX: send as inline_data for Gemini to process
+        const base64 = await readFileAsBase64(uploadedFile);
+        parts.push({ inline_data: { mime_type: mimeType, data: base64 } });
+        parts.push({ text: PARSE_PROMPT });
+      }
+    } else {
+      // Pasted text
+      parts.push({ text: PARSE_PROMPT + '\n\nResume:\n---\n' + resumeText + '\n---' });
+    }
+
     const resp = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts }],
           generationConfig: {
             responseMimeType: 'application/json'
           }
