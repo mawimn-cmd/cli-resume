@@ -1350,9 +1350,11 @@ function sectionFallback(query) {
 
     switch (section) {
       case 'experience':
-        return d.experience.map(exp =>
-          `${exp.role} at ${exp.company} (${exp.period})\n${exp.bullets.map(b => `  • ${b}`).join('\n')}`
-        ).join('\n\n');
+        return d.experience.map(exp => {
+          const header = `${exp.role} at ${exp.company} (${exp.period})`;
+          const bullets = (exp.bullets || []).map(b => `  • ${b}`).join('\n');
+          return bullets ? `${header}\n${bullets}` : header;
+        }).join('\n\n');
 
       case 'skills':
         return "Here are my skills:\n\n" + Object.entries(d.skills).map(([cat, items]) =>
