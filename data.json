@@ -8,32 +8,32 @@
     {
       "role": "Delivery Lead",
       "company": "Olympus",
-      "period": "2023 – Present",
-      "location": "Berlin"
+      "period": "",
+      "location": ""
     },
     {
       "role": "Delivery Manager",
       "company": "Delivery Hero",
-      "period": "2022 – 2023",
-      "location": "Berlin"
+      "period": "",
+      "location": ""
     },
     {
       "role": "Project Manager",
       "company": "Zalando",
-      "period": "2021 – 2022",
-      "location": "berlin"
+      "period": "",
+      "location": ""
     },
     {
       "role": "Technical Project Manager",
       "company": "adidas",
-      "period": "2019 – 2020",
-      "location": "Erlangen"
+      "period": "",
+      "location": ""
     },
     {
       "role": "Project Manager",
       "company": "Cognizant | Tata Consultancy Services",
-      "period": "2013 – 2017",
-      "location": "India"
+      "period": "",
+      "location": ""
     }
   ],
   "projects": [],
@@ -59,22 +59,22 @@
   },
   "education": [
     {
-      "degree": "Master of Business Administration (Strategy)",
-      "school": "ESB Reutlingen University",
+      "degree": "Master of Business Administration",
+      "school": "",
       "period": "",
-      "details": "Germany"
+      "details": ""
     },
     {
-      "degree": "Bachelor of Technology (Mechanical Engineering)",
-      "school": "National Institute of Technology",
+      "degree": "Bachelor of Technology",
+      "school": "",
       "period": "",
-      "details": "India"
+      "details": ""
     }
   ],
   "contact": {
-    "linkedin": "linkedin.com/in/mohit-gupta-64339624",
-    "github": "https://github.com/mawimn-cmd",
-    "scheduling": "https://calendly.com/mawimn/30min"
+    "linkedin": "linkedin.com/in/",
+    "github": "https://github.comd",
+    "scheduling": "https://calendly.com"
   },
   "qaPairs": [
     {
@@ -156,5 +156,5 @@
       "answer": "Work on interesting AI products/projects that contribute to solving genuine problems"
     }
   ],
-  "geminiApiKey": "QUl6YVN5QlppckxLMGh4Qi1PTUpRLWp2elk5dDRzWFpwVHpmX0VZ"
+  "geminiApiKey": ""
 }
