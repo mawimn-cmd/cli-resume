@@ -602,6 +602,16 @@
       </div>
     </div>
 
+    <!-- Gemini API key (for edit mode) -->
+    <div style="margin-bottom: 16px;">
+      <label for="api-key-step2">Gemini API Key</label>
+      <input type="password" id="api-key-step2" placeholder="AIzaSy...">
+      <p class="note-text">
+        Powers the AI chat on your live resume. Free to use.
+        <br><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="help-link">Get a free API key →</a>
+      </p>
+    </div>
+
     <!-- Scheduling link -->
     <div style="margin-bottom: 16px;">
       <label for="scheduling-link">Scheduling link (optional)</label>
@@ -1119,6 +1129,7 @@ async function parseResume() {
 
     // Store Gemini API key for live chat
     parsedData.geminiApiKey = apiKey;
+    document.getElementById('api-key-step2').value = apiKey;
 
     // Extract photo from DOCX if applicable
     if (uploadedFile && getFileExt(uploadedFile) === 'docx') {
@@ -1177,6 +1188,12 @@ function renderReview() {
 
   // Update photo preview
   updatePhotoPreview();
+
+  // Update API key field in Step 2
+  const apiKeyStep2 = document.getElementById('api-key-step2');
+  if (apiKeyStep2 && d.geminiApiKey) {
+    apiKeyStep2.value = d.geminiApiKey;
+  }
 
   // Update scheduling link field
   const schedulingInput = document.getElementById('scheduling-link');
@@ -1290,8 +1307,12 @@ function finishQa() {
 // STEP 4: Deploy
 // ============================================================
 function getFinalData() {
-  // Persist scheduling link and theme before export
+  // Persist API key, scheduling link and theme before export
   if (parsedData) {
+    const apiKeyVal = document.getElementById('api-key-step2').value.trim();
+    if (apiKeyVal) {
+      parsedData.geminiApiKey = apiKeyVal;
+    }
     const schedulingLink = document.getElementById('scheduling-link').value.trim();
     if (schedulingLink) {
       if (!parsedData.contact) parsedData.contact = {};
