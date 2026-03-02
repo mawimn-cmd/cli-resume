@@ -866,17 +866,18 @@ function escapeHTML(str) {
 // DATA LOADING
 // ============================================================
 async function loadData() {
-  let dataLoaded = false;
   try {
+    console.log('[CLI Resume] Fetching data.json...');
     const resp = await fetch('data.json');
-    if (!resp.ok) throw new Error('Not found');
+    console.log('[CLI Resume] Fetch status:', resp.status);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     RESUME_DATA = await resp.json();
-    dataLoaded = true;
+    console.log('[CLI Resume] Data loaded:', RESUME_DATA.name);
   } catch (e) {
+    console.error('[CLI Resume] Failed to load data:', e);
     showSetupScreen();
     return;
   }
-  // Render errors should surface in console, not trigger setup screen
   onDataLoaded();
 }
 
