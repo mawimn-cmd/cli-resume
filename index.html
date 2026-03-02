@@ -866,14 +866,18 @@ function escapeHTML(str) {
 // DATA LOADING
 // ============================================================
 async function loadData() {
+  let dataLoaded = false;
   try {
     const resp = await fetch('data.json');
     if (!resp.ok) throw new Error('Not found');
     RESUME_DATA = await resp.json();
-    onDataLoaded();
+    dataLoaded = true;
   } catch (e) {
     showSetupScreen();
+    return;
   }
+  // Render errors should surface in console, not trigger setup screen
+  onDataLoaded();
 }
 
 function showSetupScreen() {
