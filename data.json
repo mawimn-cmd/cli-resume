@@ -1,0 +1,164 @@
+{
+  "name": "MOHIT GUPTA",
+  "title": "Delivery Lead",
+  "bio": [
+    "AI enthusiast Delivery Lead who turns strategy into measurable outcomes while working at the intersection of Product, Engineering & Commercial teams."
+  ],
+  "experience": [
+    {
+      "role": "Delivery Lead",
+      "company": "Olympus",
+      "period": "2023 – Present",
+      "location": "Berlin"
+    },
+    {
+      "role": "Delivery Manager",
+      "company": "Delivery Hero",
+      "period": "2022 – 2023",
+      "location": ""
+    },
+    {
+      "role": "Project Manager",
+      "company": "Zalando",
+      "period": "2020 – 2022",
+      "location": ""
+    },
+    {
+      "role": "Technical Project Manager",
+      "company": "adidas",
+      "period": "2019 – 2020",
+      "location": ""
+    },
+    {
+      "role": "Project Manager",
+      "company": "Cognizant | Tata Consultancy Services",
+      "period": "2013 – 2017",
+      "location": ""
+    }
+  ],
+  "projects": [],
+  "skills": {
+    "Program Management": [
+      "Program Management",
+      "Agile Project Management",
+      "Iteration Planning",
+      "Product Operations",
+      "Release Management",
+      "Product Launch",
+      "Business Analysis",
+      "Stakeholder Management"
+    ],
+    "Technical Stack": [
+      "MS Excel",
+      "SQL",
+      "Power BI",
+      "Jira",
+      "ADO",
+      "Notion",
+      "Confluence",
+      "Claude code"
+    ],
+    "Languages": [
+      "English (Fluent)",
+      "Deutsch (B1)"
+    ]
+  },
+  "education": [
+    {
+      "degree": "Master of Business Administration (Strategy)",
+      "school": "ESB Reutlingen University",
+      "period": "",
+      "details": "Germany"
+    },
+    {
+      "degree": "Bachelor of Technology (Mechanical Engineering)",
+      "school": "National Institute of Technology",
+      "period": "",
+      "details": "India"
+    }
+  ],
+  "contact": {
+    "linkedin": "linkedin.com/in/mohit-gupta-64339624",
+    "github": "https://github.com/mawimn-cmd"
+  },
+  "qaPairs": [
+    {
+      "question": "Tell me about yourself",
+      "keywords": [
+        "yourself",
+        "about",
+        "who",
+        "introduction",
+        "intro",
+        "summary",
+        "tell"
+      ],
+      "answer": "AI enthusiast Delivery Lead with more than 10 years of experience. I have completed my Bachelors from India and MBA from ESB university and then worked for few tech companies. I have recently been experimenting with AI and working on new ideas. My vision is to create products that provide an alternative perspective or help people in some way"
+    },
+    {
+      "question": "What are your strengths?",
+      "keywords": [
+        "strength",
+        "greatest",
+        "best",
+        "superpower",
+        "strongest",
+        "good"
+      ],
+      "answer": "My biggest strengths are High agency and Growth mindset. I thrive in uncertainty and challenging projects. Even if I would not have all the information I would challenge myself to think from first principle and figure out ways to move forward considering the risk and rewards"
+    },
+    {
+      "question": "How do you handle feedback or criticism?",
+      "keywords": [
+        "feedback",
+        "criticism",
+        "critique",
+        "critical",
+        "negative",
+        "review",
+        "improve",
+        "constructive"
+      ],
+      "answer": "I have a growth mindset and appreciate any feedback. I would put myself in other's shoe and would try to think from their perspective why was the feedback provided, ask clarifying questions and make a plan to address the gap or how to handle the root cause of the perspection"
+    },
+    {
+      "question": "How do you prioritize work?",
+      "keywords": [
+        "prioritize",
+        "priority",
+        "prioritization",
+        "work",
+        "roadmap",
+        "decide",
+        "urgent"
+      ],
+      "answer": "Prioritize work on critical path or something that would affect the key KPIS. Delegate where possible."
+    },
+    {
+      "question": "How do you handle conflict?",
+      "keywords": [
+        "conflict",
+        "disagree",
+        "disagreement",
+        "argument",
+        "tension",
+        "difficult"
+      ],
+      "answer": "Conflict is the way to have meaningful conversation. Conflict is another opportunity to align better. If there is a conflict we need to acknowledge there is a conflict, understand the other perspective and find a joint solution"
+    },
+    {
+      "question": "What are your long-term career goals?",
+      "keywords": [
+        "goals",
+        "career",
+        "long-term",
+        "future",
+        "ambition",
+        "growth",
+        "aspiration",
+        "vision"
+      ],
+      "answer": "Work on interesting AI products/projects that contribute to solving genuine problem"
+    }
+  ]
+}
