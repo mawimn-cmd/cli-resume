@@ -347,6 +347,81 @@
       font-size: 12px;
     }
 
+    /* Photo upload in Step 2 */
+    .photo-upload-section {
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .photo-preview-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px dashed rgba(148, 163, 184, 0.3);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .photo-preview-circle.has-photo {
+      border: 2px solid var(--purple);
+      box-shadow: 0 0 12px var(--purple-glow);
+    }
+
+    .photo-preview-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .photo-preview-circle .no-photo-text {
+      color: var(--text-muted);
+      font-size: 10px;
+      text-align: center;
+      padding: 4px;
+    }
+
+    /* Theme selector dots */
+    .theme-selector {
+      display: flex;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .theme-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+
+    .theme-dot:hover { transform: scale(1.15); }
+    .theme-dot.selected { border-color: var(--text); transform: scale(1.15); }
+
+    /* API key info box */
+    .api-key-info {
+      background: rgba(234, 179, 8, 0.08);
+      border: 1px solid rgba(234, 179, 8, 0.2);
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      color: var(--yellow);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .api-key-info a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    .api-key-info a:hover { color: var(--purple); }
+
     /* ============================================================
        STEP 3: Q&A
        ============================================================ */
@@ -511,6 +586,41 @@
 
     <div id="review-content"></div>
 
+    <!-- Photo upload -->
+    <div class="photo-upload-section" id="photo-upload-section">
+      <label>Profile photo (optional)</label>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="photo-preview-circle" id="photo-preview">
+          <span class="no-photo-text" id="photo-preview-text">No photo</span>
+          <img id="photo-preview-img" style="display:none;" alt="Photo preview">
+        </div>
+        <div>
+          <input type="file" id="photo-file" accept="image/jpeg,image/png" style="display:none">
+          <button class="btn btn-secondary" type="button" onclick="document.getElementById('photo-file').click()">Upload photo</button>
+          <p class="note-text" style="margin-top: 8px; margin-bottom: 0;">JPG or PNG. Embedded as base64 in data.json.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scheduling link -->
+    <div style="margin-bottom: 16px;">
+      <label for="scheduling-link">Scheduling link (optional)</label>
+      <input type="url" id="scheduling-link" placeholder="https://calendly.com/your-link">
+      <p class="note-text">Calendly, Cal.com, or any scheduling URL. Shown in chat when no answer is available.</p>
+    </div>
+
+    <!-- Theme selector -->
+    <div style="margin-bottom: 16px;">
+      <label>Default theme</label>
+      <div class="theme-selector" id="theme-selector">
+        <div class="theme-dot selected" data-theme="purple" style="background: #A855F7;" title="Purple (default)"></div>
+        <div class="theme-dot" data-theme="green" style="background: #22c55e;" title="Green"></div>
+        <div class="theme-dot" data-theme="blue" style="background: #3b82f6;" title="Blue"></div>
+        <div class="theme-dot" data-theme="orange" style="background: #f97316;" title="Orange"></div>
+        <div class="theme-dot" data-theme="rose" style="background: #f43f5e;" title="Rose"></div>
+      </div>
+    </div>
+
     <div class="json-editor" id="json-editor">
       <label for="json-edit-area">Edit JSON</label>
       <textarea id="json-edit-area" class="json-editor-textarea"></textarea>
@@ -563,6 +673,10 @@
     <div class="step-desc">Push directly to GitHub or download the data file.</div>
 
     <div id="deploy-form">
+      <div class="api-key-info" id="api-key-info" style="display:none;">
+        &#9888; Your Gemini API key powers the AI chat on your live resume. It's free and can be rotated anytime at
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
+      </div>
       <div class="deploy-options">
         <!-- Option A: GitHub -->
         <div class="deploy-card">
@@ -767,6 +881,73 @@ async function extractDocxText(file) {
   return zip;
 }
 
+// Extract first image from DOCX word/media/ folder
+async function extractDocxPhoto(file) {
+  try {
+    const arrayBuffer = await readFileAsArrayBuffer(file);
+    return await readZipEntryBinary(arrayBuffer, 'word/media/image');
+  } catch {
+    return null;
+  }
+}
+
+// Minimal ZIP reader — extracts first binary entry matching a name prefix
+async function readZipEntryBinary(buffer, namePrefix) {
+  const bytes = new Uint8Array(buffer);
+  const decoder = new TextDecoder();
+  let offset = 0;
+
+  while (offset < bytes.length - 4) {
+    if (bytes[offset] !== 0x50 || bytes[offset+1] !== 0x4B ||
+        bytes[offset+2] !== 0x03 || bytes[offset+3] !== 0x04) {
+      break;
+    }
+
+    const compressionMethod = bytes[offset+8] | (bytes[offset+9] << 8);
+    const compressedSize = bytes[offset+18] | (bytes[offset+19] << 8) | (bytes[offset+20] << 16) | (bytes[offset+21] << 24);
+    const nameLen = bytes[offset+26] | (bytes[offset+27] << 8);
+    const extraLen = bytes[offset+28] | (bytes[offset+29] << 8);
+    const fileName = decoder.decode(bytes.slice(offset+30, offset+30+nameLen));
+    const dataStart = offset + 30 + nameLen + extraLen;
+
+    if (fileName.startsWith(namePrefix)) {
+      let rawData = bytes.slice(dataStart, dataStart + compressedSize);
+
+      if (compressionMethod === 8) {
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(rawData);
+        writer.close();
+        const reader = ds.readable.getReader();
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+        }
+        const decompressed = new Uint8Array(chunks.reduce((a, c) => a + c.length, 0));
+        let pos = 0;
+        for (const chunk of chunks) { decompressed.set(chunk, pos); pos += chunk.length; }
+        rawData = decompressed;
+      }
+
+      const ext = fileName.split('.').pop().toLowerCase();
+      const mimeMap = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', bmp: 'image/bmp' };
+      const mime = mimeMap[ext] || 'image/png';
+
+      let binary = '';
+      for (let i = 0; i < rawData.length; i++) {
+        binary += String.fromCharCode(rawData[i]);
+      }
+      return `data:${mime};base64,${btoa(binary)}`;
+    }
+
+    offset = dataStart + compressedSize;
+  }
+
+  return null;
+}
+
 // Minimal ZIP reader — extracts a single file entry by name
 async function readZipEntry(buffer, targetName) {
   const bytes = new Uint8Array(buffer);
@@ -936,6 +1117,15 @@ async function parseResume() {
     // Ensure qaPairs array exists
     if (!parsedData.qaPairs) parsedData.qaPairs = [];
 
+    // Store Gemini API key for live chat
+    parsedData.geminiApiKey = apiKey;
+
+    // Extract photo from DOCX if applicable
+    if (uploadedFile && getFileExt(uploadedFile) === 'docx') {
+      const photo = await extractDocxPhoto(uploadedFile);
+      if (photo) parsedData.photo = photo;
+    }
+
     renderReview();
     goToStep(1);
   } catch (err) {
@@ -984,6 +1174,23 @@ function renderReview() {
       <div class="review-item">GitHub: <span>${escapeHTML(d.contact?.github || '(not found)')}</span></div>
     </div>
   `;
+
+  // Update photo preview
+  updatePhotoPreview();
+
+  // Update scheduling link field
+  const schedulingInput = document.getElementById('scheduling-link');
+  if (schedulingInput && d.contact?.scheduling) {
+    schedulingInput.value = d.contact.scheduling;
+  }
+
+  // Update theme selector
+  if (d.theme) {
+    document.querySelectorAll('.theme-dot').forEach(dot => {
+      dot.classList.toggle('selected', dot.dataset.theme === d.theme);
+    });
+    selectedTheme = d.theme;
+  }
 }
 
 function toggleJsonEditor() {
@@ -1083,6 +1290,19 @@ function finishQa() {
 // STEP 4: Deploy
 // ============================================================
 function getFinalData() {
+  // Persist scheduling link and theme before export
+  if (parsedData) {
+    const schedulingLink = document.getElementById('scheduling-link').value.trim();
+    if (schedulingLink) {
+      if (!parsedData.contact) parsedData.contact = {};
+      parsedData.contact.scheduling = schedulingLink;
+    }
+    if (selectedTheme && selectedTheme !== 'purple') {
+      parsedData.theme = selectedTheme;
+    } else {
+      delete parsedData.theme;
+    }
+  }
   return JSON.stringify(parsedData, null, 2);
 }
 
@@ -1206,6 +1426,106 @@ async function deployToGitHub() {
     btn.innerHTML = 'Deploy to GitHub';
   }
 }
+
+// ============================================================
+// PHOTO UPLOAD HANDLING
+// ============================================================
+function updatePhotoPreview() {
+  const img = document.getElementById('photo-preview-img');
+  const text = document.getElementById('photo-preview-text');
+  const circle = document.getElementById('photo-preview');
+
+  if (parsedData && parsedData.photo) {
+    img.src = parsedData.photo;
+    img.style.display = 'block';
+    text.style.display = 'none';
+    circle.classList.add('has-photo');
+  } else {
+    img.style.display = 'none';
+    text.style.display = 'block';
+    circle.classList.remove('has-photo');
+  }
+}
+
+document.getElementById('photo-file').addEventListener('change', (e) => {
+  if (!e.target.files.length) return;
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (parsedData) {
+      parsedData.photo = reader.result;
+      updatePhotoPreview();
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+// ============================================================
+// THEME SELECTOR
+// ============================================================
+let selectedTheme = 'purple';
+
+document.getElementById('theme-selector').addEventListener('click', (e) => {
+  const dot = e.target.closest('.theme-dot');
+  if (!dot) return;
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.remove('selected'));
+  dot.classList.add('selected');
+  selectedTheme = dot.dataset.theme;
+});
+
+// ============================================================
+// DEPLOY STEP — Show API key warning
+// ============================================================
+const originalGoToStep = goToStep;
+goToStep = function(n) {
+  originalGoToStep(n);
+  // Show API key info on deploy step
+  if (n === 3 && parsedData?.geminiApiKey) {
+    document.getElementById('api-key-info').style.display = 'block';
+  }
+};
+
+// ============================================================
+// EDIT MODE (?edit=true)
+// ============================================================
+async function checkEditMode() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('edit') || params.get('edit') !== 'true') return;
+
+  try {
+    const resp = await fetch('data.json');
+    if (!resp.ok) return;
+    const data = await resp.json();
+
+    parsedData = data;
+    if (!parsedData.qaPairs) parsedData.qaPairs = [];
+
+    // Pre-fill API key
+    if (parsedData.geminiApiKey) {
+      document.getElementById('api-key').value = parsedData.geminiApiKey;
+    }
+
+    // Pre-fill Q&A answers
+    if (parsedData.qaPairs.length > 0) {
+      for (let i = 0; i < QA_QUESTIONS.length; i++) {
+        const matching = parsedData.qaPairs.find(p =>
+          p.question === QA_QUESTIONS[i]
+        );
+        if (matching) {
+          qaAnswers[i] = matching;
+        }
+      }
+    }
+
+    // Render review and jump to Step 2
+    renderReview();
+    goToStep(1);
+  } catch {
+    // data.json not found, stay on Step 1
+  }
+}
+
+checkEditMode();
 </script>
 </body>
 </html>
