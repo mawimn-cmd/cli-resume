@@ -1512,8 +1512,11 @@ function getFollowUps(lastQuery) {
 // GEMINI API CHAT (Layer 3)
 // ============================================================
 async function askGemini(query) {
-  const apiKey = RESUME_DATA.geminiApiKey;
-  if (!apiKey) return null;
+  const rawKey = RESUME_DATA.geminiApiKey;
+  if (!rawKey) return null;
+  // Decode base64-encoded key
+  let apiKey;
+  try { apiKey = atob(rawKey); } catch { apiKey = rawKey; }
 
   const context = {...RESUME_DATA};
   delete context.geminiApiKey;

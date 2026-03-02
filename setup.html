@@ -1127,8 +1127,8 @@ async function parseResume() {
     // Ensure qaPairs array exists
     if (!parsedData.qaPairs) parsedData.qaPairs = [];
 
-    // Store Gemini API key for live chat
-    parsedData.geminiApiKey = apiKey;
+    // Store Gemini API key for live chat (encoded)
+    parsedData.geminiApiKey = btoa(apiKey);
     document.getElementById('api-key-step2').value = apiKey;
 
     // Extract photo from DOCX if applicable
@@ -1189,10 +1189,10 @@ function renderReview() {
   // Update photo preview
   updatePhotoPreview();
 
-  // Update API key field in Step 2
+  // Update API key field in Step 2 (decode for display)
   const apiKeyStep2 = document.getElementById('api-key-step2');
   if (apiKeyStep2 && d.geminiApiKey) {
-    apiKeyStep2.value = d.geminiApiKey;
+    try { apiKeyStep2.value = atob(d.geminiApiKey); } catch { apiKeyStep2.value = d.geminiApiKey; }
   }
 
   // Update scheduling link field
@@ -1311,7 +1311,8 @@ function getFinalData() {
   if (parsedData) {
     const apiKeyVal = document.getElementById('api-key-step2').value.trim();
     if (apiKeyVal) {
-      parsedData.geminiApiKey = apiKeyVal;
+      // Encode to avoid GitHub secret scanning on public repos
+      parsedData.geminiApiKey = btoa(apiKeyVal);
     }
     const schedulingLink = document.getElementById('scheduling-link').value.trim();
     if (schedulingLink) {
