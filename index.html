@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mohit Gupta — Resume</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --purple: #A855F7;
+      --purple-glow: rgba(168, 85, 247, 0.3);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --cyan: #06b6d4;
+      --font: Consolas, Monaco, 'Courier New', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+      overflow: hidden;
+    }
+
+    /* ============================================================
+       BOOT SCREEN
+       ============================================================ */
+    #boot-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.6s ease;
+      cursor: pointer;
+    }
+
+    #boot-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #boot-text {
+      color: var(--text-muted);
+      font-size: 14px;
+      min-height: 1.6em;
+    }
+
+    #boot-spinner {
+      color: var(--purple);
+      font-size: 16px;
+      margin-top: 12px;
+      min-height: 1.6em;
+    }
+
+    #boot-name {
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    #boot-name.visible { opacity: 1; }
+
+    #boot-name h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--purple);
+      text-shadow: 0 0 20px var(--purple-glow), 0 0 40px var(--purple-glow);
+      letter-spacing: 3px;
+    }
+
+    #boot-name p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    #boot-skip {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 40px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    #boot-skip.visible { opacity: 0.5; }
+
+    .cursor-blink {
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    .purple { color: var(--purple); }
+    .green { color: var(--green); }
+    .muted { color: var(--text-muted); }
+    .yellow { color: var(--yellow); }
+    .cyan { color: var(--cyan); }
+    .red { color: var(--red); }
+
+    /* ============================================================
+       MAIN LAYOUT — Split Screen
+       ============================================================ */
+    #app {
+      display: flex;
+      height: 100vh;
+      height: 100dvh;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    #app.visible { opacity: 1; }
+
+    /* Left Panel — Resume */
+    #resume-panel {
+      flex: 0 0 60%;
+      overflow-y: auto;
+      padding: 32px 40px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface) var(--bg);
+      border-right: 1px solid var(--surface);
+    }
+
+    #resume-panel::-webkit-scrollbar { width: 6px; }
+    #resume-panel::-webkit-scrollbar-track { background: var(--bg); }
+    #resume-panel::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+
+    /* Right Panel — Chat */
+    #chat-panel {
+      flex: 0 0 40%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      min-width: 0;
+    }
+
+    /* ============================================================
+       RESUME HEADER
+       ============================================================ */
+    .resume-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .photo-circle {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid var(--purple);
+      box-shadow: 0 0 16px var(--purple-glow);
+      overflow: hidden;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--purple);
+    }
+
+    .photo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+
+    .photo-circle img.loaded { display: block; }
+    .photo-circle .initials { display: block; }
+    .photo-circle img.loaded + .initials { display: none; }
+
+    .header-info h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--purple);
+      text-shadow: 0 0 16px var(--purple-glow);
+      letter-spacing: 2px;
+      line-height: 1.2;
+    }
+
+    .header-info .title-text {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .contact-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .contact-row a {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+    }
+
+    .contact-row a:hover { color: var(--purple); }
+
+    .contact-row .sep {
+      color: var(--surface);
+      user-select: none;
+    }
+
+    /* ============================================================
+       SECTION CARDS
+       ============================================================ */
+    .section-card {
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-left: 3px solid var(--purple);
+      border-radius: 6px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+
+    .section-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: var(--purple);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .section-icon {
+      font-size: 14px;
+    }
+
+    /* Experience entries */
+    .exp-entry { margin-bottom: 16px; }
+    .exp-entry:last-child { margin-bottom: 0; }
+
+    .exp-role {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .exp-meta {
+      color: var(--green);
+      font-size: 13px;
+      margin-top: 1px;
+    }
+
+    .exp-bullets {
+      margin-top: 6px;
+      padding-left: 4px;
+    }
+
+    .exp-bullets li {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+      list-style: none;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .exp-bullets li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--text-muted);
+    }
+
+    .exp-divider {
+      border: none;
+      border-top: 1px solid rgba(148, 163, 184, 0.1);
+      margin: 14px 0;
+    }
+
+    /* Project cards */
+    .proj-entry { margin-bottom: 14px; }
+    .proj-entry:last-child { margin-bottom: 0; }
+
+    .proj-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .proj-desc {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    .proj-tech {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .tech-tag {
+      background: rgba(168, 85, 247, 0.12);
+      color: var(--purple);
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+
+    .proj-link {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 13px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .proj-link:hover { color: var(--purple); }
+
+    /* Skills */
+    .skill-group { margin-bottom: 12px; }
+    .skill-group:last-child { margin-bottom: 0; }
+
+    .skill-category-label {
+      color: var(--yellow);
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .skill-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .skill-chip {
+      background: rgba(34, 197, 94, 0.08);
+      color: var(--text-muted);
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    /* Education */
+    .edu-degree {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .edu-meta {
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .edu-details {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 2px;
+    }
+
+    /* Contact section detail */
+    .contact-detail-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .contact-detail-row:last-child { margin-bottom: 0; }
+
+    .contact-label {
+      color: var(--yellow);
+      font-weight: 700;
+      font-size: 13px;
+      min-width: 70px;
+    }
+
+    .contact-value a {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .contact-value a:hover { color: var(--purple); }
+
+    /* ============================================================
+       CHAT PANEL
+       ============================================================ */
+    .chat-header {
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid var(--surface);
+      flex-shrink: 0;
+    }
+
+    .chat-header h2 {
+      color: var(--purple);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .chat-header p {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface) var(--bg);
+    }
+
+    .chat-messages::-webkit-scrollbar { width: 5px; }
+    .chat-messages::-webkit-scrollbar-track { background: var(--bg); }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--surface); border-radius: 3px; }
+
+    /* Message bubbles */
+    .msg {
+      max-width: 88%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .msg-bot {
+      align-self: flex-start;
+      background: var(--surface);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg-user {
+      align-self: flex-end;
+      background: var(--purple);
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      align-self: flex-start;
+      display: flex;
+      gap: 4px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border-radius: 12px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: typing-bounce 1.2s ease-in-out infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    /* Suggested questions */
+    .suggested-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .suggest-chip {
+      display: inline-block;
+      padding: 5px 12px;
+      border: 1px solid var(--surface);
+      border-radius: 16px;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .suggest-chip:hover {
+      border-color: var(--purple);
+      color: var(--text);
+      background: rgba(168, 85, 247, 0.08);
+    }
+
+    .suggest-chip:active { transform: scale(0.96); }
+
+    /* Chat input area */
+    .chat-input-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--surface);
+      flex-shrink: 0;
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .chat-input-area input:focus {
+      border-color: var(--purple);
+    }
+
+    .chat-input-area input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.6;
+    }
+
+    .send-btn {
+      background: var(--purple);
+      border: none;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #fff;
+      font-size: 16px;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .send-btn:hover { background: #9333ea; }
+    .send-btn:active { transform: scale(0.94); }
+
+    /* ============================================================
+       MOBILE — Stacked + Floating Chat
+       ============================================================ */
+    @media (max-width: 768px) {
+      #app {
+        flex-direction: column;
+      }
+
+      #resume-panel {
+        flex: 1;
+        border-right: none;
+        padding: 20px 16px;
+        overflow-y: auto;
+      }
+
+      #chat-panel {
+        display: none;
+      }
+
+      /* Floating chat button */
+      #chat-fab {
+        display: flex;
+      }
+
+      /* Bottom sheet chat */
+      #chat-sheet.open {
+        transform: translateY(0);
+      }
+    }
+
+    @media (min-width: 769px) {
+      #chat-fab { display: none !important; }
+      #chat-sheet { display: none !important; }
+    }
+
+    /* Chat FAB (floating action button) */
+    #chat-fab {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px var(--purple-glow);
+      cursor: pointer;
+      z-index: 50;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    #chat-fab:hover { background: #9333ea; }
+    #chat-fab:active { transform: scale(0.92); }
+
+    /* Mobile bottom sheet */
+    #chat-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 75vh;
+      background: var(--bg);
+      border-top: 2px solid var(--purple);
+      border-radius: 16px 16px 0 0;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    #chat-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .sheet-handle-bar .handle {
+      width: 40px;
+      height: 4px;
+      background: var(--surface);
+      border-radius: 2px;
+    }
+
+    #chat-sheet-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 55;
+    }
+
+    #chat-sheet-overlay.open { display: block; }
+
+    /* Sheet chat reuses chat styles */
+    #chat-sheet .chat-header { padding: 8px 20px 12px; }
+    #chat-sheet .chat-messages { padding: 12px 16px; }
+    #chat-sheet .chat-input-area { padding: 10px 12px 14px; }
+
+    /* ============================================================
+       RESPONSIVE TWEAKS
+       ============================================================ */
+    @media (max-width: 900px) and (min-width: 769px) {
+      #resume-panel { flex: 0 0 55%; padding: 24px 24px; }
+      #chat-panel { flex: 0 0 45%; }
+    }
+
+    @media (max-width: 480px) {
+      .resume-header { flex-direction: column; text-align: center; }
+      .contact-row { justify-content: center; }
+      .header-info h1 { font-size: 22px; }
+      .section-card { padding: 16px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     BOOT SCREEN OVERLAY
+     ============================================================ -->
+<div id="boot-screen">
+  <div id="boot-text"><span class="cursor-blink">█</span></div>
+  <div id="boot-spinner"></div>
+  <div id="boot-name">
+    <h1>MOHIT GUPTA</h1>
+    <p>Product Manager & Builder</p>
+  </div>
+  <div id="boot-skip">Click or press any key to skip</div>
+</div>
+
+<!-- ============================================================
+     MAIN APP — Split Screen
+     ============================================================ -->
+<div id="app">
+
+  <!-- LEFT — Resume Panel -->
+  <div id="resume-panel">
+    <div id="resume-content"></div>
+  </div>
+
+  <!-- RIGHT — Chat Panel (desktop) -->
+  <div id="chat-panel">
+    <div class="chat-header">
+      <h2>Chat with Mohit</h2>
+      <p>Ask me anything about my experience</p>
+    </div>
+    <div class="chat-messages" id="chat-messages"></div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Type a question..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <button class="send-btn" id="send-btn" aria-label="Send">&#9654;</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile chat FAB -->
+<button id="chat-fab" aria-label="Open chat">&#9993;</button>
+
+<!-- Mobile chat bottom sheet -->
+<div id="chat-sheet-overlay"></div>
+<div id="chat-sheet">
+  <div class="sheet-handle-bar" id="sheet-close"><div class="handle"></div></div>
+  <div class="chat-header">
+    <h2>Chat with Mohit</h2>
+    <p>Ask me anything about my experience</p>
+  </div>
+  <div class="chat-messages" id="chat-messages-mobile"></div>
+  <div class="chat-input-area">
+    <input type="text" id="chat-input-mobile" placeholder="Type a question..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    <button class="send-btn" id="send-btn-mobile" aria-label="Send">&#9654;</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// RESUME DATA
+// ============================================================
+const RESUME_DATA = {
+  name: "Mohit Gupta",
+  title: "Product Manager & Builder",
+  bio: [
+    "Product manager who builds. I combine product strategy with",
+    "hands-on technical skills to ship products that matter.",
+    "",
+    "I believe the best PMs understand the full stack — from user",
+    "research to system architecture. I write code, run experiments,",
+    "and make data-driven decisions.",
+    "",
+    "Currently exploring the intersection of AI and product development."
+  ],
+  experience: [
+    {
+      role: "Product Manager",
+      company: "Company Name",
+      period: "2023 — Present",
+      location: "Location",
+      bullets: [
+        "Led product strategy for [product/feature]",
+        "Shipped [key deliverable] resulting in [metric]",
+        "Collaborated with engineering team of [N] to deliver [outcome]"
+      ]
+    },
+    {
+      role: "Previous Role",
+      company: "Previous Company",
+      period: "2021 — 2023",
+      location: "Location",
+      bullets: [
+        "Owned roadmap for [product area]",
+        "Drove [X]% improvement in [metric]",
+        "Launched [feature] serving [N] users"
+      ]
+    }
+  ],
+  projects: [
+    {
+      name: "CLI Resume",
+      description: "Interactive terminal-style resume (you're looking at it)",
+      tech: "HTML, CSS, JavaScript",
+      url: "https://github.com/mohitgupta"
+    },
+    {
+      name: "Project Name",
+      description: "Brief description of what this project does",
+      tech: "Tech stack used",
+      url: "https://github.com/mohitgupta"
+    }
+  ],
+  skills: {
+    "Product": ["Product Strategy", "Roadmapping", "User Research", "A/B Testing", "PRDs", "OKRs"],
+    "Technical": ["JavaScript", "Python", "HTML/CSS", "SQL", "Git", "APIs"],
+    "Tools": ["Jira", "Figma", "Amplitude", "Mixpanel", "Notion", "Miro"],
+    "AI/ML": ["Prompt Engineering", "LLM Integration", "Claude API", "Gemini API"]
+  },
+  education: [
+    {
+      degree: "Degree Name",
+      school: "University Name",
+      period: "Year — Year",
+      details: "Relevant coursework or achievements"
+    }
+  ],
+  contact: {
+    email: "email@example.com",
+    linkedin: "https://linkedin.com/in/mohitgupta",
+    github: "https://github.com/mohitgupta",
+    website: ""
+  },
+  qaPairs: [
+    {
+      question: "What's your management style?",
+      keywords: ["management", "style", "lead", "leadership", "manage", "team"],
+      answer: "I lead with context, not control. I set clear goals, share the 'why' behind decisions, and trust the team to find the best path. I default to transparency and async communication."
+    },
+    {
+      question: "Why product management?",
+      keywords: ["why", "product", "pm", "career", "chose", "choose"],
+      answer: "I love the intersection of technology, business, and user needs. Product management lets me solve real problems while thinking strategically about what to build and why."
+    },
+    {
+      question: "What's your technical background?",
+      keywords: ["technical", "background", "coding", "engineer", "programming", "code", "developer"],
+      answer: "I'm a PM who codes. I build tools and prototypes to validate ideas faster. This helps me collaborate effectively with engineers and make better technical trade-off decisions."
+    },
+    {
+      question: "How do you prioritize?",
+      keywords: ["prioritize", "priority", "roadmap", "decide", "framework", "prioritization"],
+      answer: "I use a combination of impact/effort scoring, user research data, and business objectives. I'm a fan of the Opportunity Solution Tree for connecting outcomes to opportunities to solutions."
+    },
+    {
+      question: "What are you looking for?",
+      keywords: ["looking", "want", "next", "role", "opportunity", "ideal", "seeking"],
+      answer: "A product role where I can own meaningful outcomes, work with talented engineers, and ship products that users genuinely love. Bonus points for AI/ML product work."
+    },
+    {
+      question: "Tell me about a failure.",
+      keywords: ["failure", "fail", "mistake", "wrong", "learned", "lesson"],
+      answer: "I once shipped a feature based on stakeholder requests without validating with users first. It saw low adoption. The lesson: always validate assumptions with real users before building."
+    },
+    {
+      question: "How do you work with engineers?",
+      keywords: ["engineer", "engineering", "developers", "collaborate", "work with", "technical"],
+      answer: "I write clear specs, participate in design reviews, and respect engineering estimates. I never throw requirements over the wall — I pair on problem definition and trade-off discussions."
+    },
+    {
+      question: "What's your superpower?",
+      keywords: ["superpower", "strength", "best", "strongest", "good at", "excel"],
+      answer: "Bridging the gap between business strategy and technical execution. I can go from user interview to PRD to prototype in the same week. This speed of iteration helps teams learn faster."
+    },
+    {
+      question: "How do you measure success?",
+      keywords: ["measure", "success", "metrics", "kpi", "okr", "track", "data"],
+      answer: "Every feature needs a success metric defined before development. I set leading indicators (engagement, activation) and lagging indicators (retention, revenue) with clear targets."
+    },
+    {
+      question: "What tools do you use?",
+      keywords: ["tools", "software", "stack", "use", "workflow", "tooling"],
+      answer: "Product: Jira, Notion, Miro, Figma\nAnalytics: Amplitude, Mixpanel, SQL\nTechnical: VS Code, Git, Python, JavaScript\nAI: Claude, Gemini API, prompt engineering"
+    },
+    {
+      question: "How do you handle stakeholders?",
+      keywords: ["stakeholder", "executive", "alignment", "politics", "influence", "communication"],
+      answer: "Radical transparency + data. I share context early and often, use data to support recommendations, and always tie requests back to user outcomes and business goals."
+    },
+    {
+      question: "What's your approach to AI products?",
+      keywords: ["ai", "artificial", "intelligence", "llm", "machine", "learning", "gpt", "claude"],
+      answer: "Start with the user problem, not the technology. AI is a capability, not a product. I focus on where AI creates step-function improvements in user experience, not incremental features."
+    },
+    {
+      question: "Can you tell me about yourself?",
+      keywords: ["yourself", "about", "who", "introduction", "intro", "summary"],
+      answer: "Product manager who builds. I combine strategic thinking with hands-on technical skills. I've shipped products across multiple domains, and I'm passionate about using technology to solve real problems."
+    },
+    {
+      question: "What are your hobbies?",
+      keywords: ["hobby", "hobbies", "fun", "free time", "outside", "interests", "personal"],
+      answer: "When I'm not building products, you'll find me exploring new technologies, reading about cognitive science, and tinkering with side projects. I believe curiosity is a superpower."
+    },
+    {
+      question: "Why should we hire you?",
+      keywords: ["hire", "why you", "candidate", "bring", "value", "offer"],
+      answer: "Three reasons:\n1. I ship — I bias toward action and learning over analysis paralysis\n2. I build — I can prototype and validate ideas before full investment\n3. I think — I connect user needs to business outcomes systematically"
+    },
+    {
+      question: "How do you handle conflict?",
+      keywords: ["conflict", "disagree", "disagreement", "argument", "difficult", "tension"],
+      answer: "I seek to understand before being understood. Most conflicts stem from misaligned context, not misaligned intent. I lay out the data, acknowledge trade-offs, and propose a way to test who's right."
+    },
+    {
+      question: "What's your design philosophy?",
+      keywords: ["design", "ux", "user experience", "ui", "interface", "usability"],
+      answer: "Simplicity is the ultimate sophistication. I advocate for removing features more often than adding them. Every interaction should feel obvious — if users need a tutorial, the design needs work."
+    },
+    {
+      question: "Remote or in-office?",
+      keywords: ["remote", "office", "hybrid", "location", "onsite", "work from"],
+      answer: "I'm effective in any setup. I've led remote teams with async-first communication and in-office teams with whiteboard sessions. What matters is clear communication and shared context."
+    }
+  ]
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ============================================================
+// BOOT SEQUENCE
+// ============================================================
+const bootScreen = document.getElementById('boot-screen');
+const app = document.getElementById('app');
+let bootSkipped = false;
+
+function skipBoot() {
+  if (bootSkipped) return;
+  bootSkipped = true;
+  bootScreen.classList.add('hidden');
+  setTimeout(() => { bootScreen.style.display = 'none'; }, 600);
+  app.classList.add('visible');
+  initChat();
+}
+
+// Skip on click or keypress
+bootScreen.addEventListener('click', skipBoot);
+document.addEventListener('keydown', function bootKey(e) {
+  if (!bootSkipped && bootScreen.style.display !== 'none') {
+    skipBoot();
+    document.removeEventListener('keydown', bootKey);
+  }
+});
+
+async function bootSequence() {
+  const bootText = document.getElementById('boot-text');
+  const bootSpinner = document.getElementById('boot-spinner');
+  const bootName = document.getElementById('boot-name');
+  const bootSkipHint = document.getElementById('boot-skip');
+
+  // Show skip hint after a short delay
+  setTimeout(() => bootSkipHint.classList.add('visible'), 500);
+
+  // Stage 1: Blinking cursor
+  await sleep(800);
+  if (bootSkipped) return;
+
+  // Stage 2: Type "Initializing resume..."
+  const initText = "Initializing resume...";
+  bootText.innerHTML = '';
+  for (let i = 0; i < initText.length; i++) {
+    if (bootSkipped) return;
+    bootText.textContent = initText.slice(0, i + 1);
+    await sleep(40);
+  }
+
+  if (bootSkipped) return;
+
+  // Stage 3: Braille spinner with labels
+  const spinnerChars = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  const spinnerLabels = [
+    'Loading experience...',
+    'Compiling skills...',
+    'Indexing projects...',
+    'Ready.'
+  ];
+
+  for (let s = 0; s < spinnerLabels.length; s++) {
+    const cycles = s < spinnerLabels.length - 1 ? 8 : 3;
+    for (let i = 0; i < cycles; i++) {
+      if (bootSkipped) return;
+      bootSpinner.innerHTML = `<span class="purple">${spinnerChars[i % spinnerChars.length]}</span> ${spinnerLabels[s]}`;
+      await sleep(80);
+    }
+  }
+
+  if (bootSkipped) return;
+  bootSpinner.innerHTML = `<span class="green">✓</span> Ready.`;
+
+  // Stage 4: Name + title fade in with glow
+  await sleep(300);
+  if (bootSkipped) return;
+  bootName.classList.add('visible');
+
+  // Stage 5: Pause then fade out
+  await sleep(1200);
+  if (bootSkipped) return;
+
+  // Transition to resume
+  bootScreen.classList.add('hidden');
+  app.classList.add('visible');
+  await sleep(600);
+  bootScreen.style.display = 'none';
+  bootSkipped = true;
+  initChat();
+}
+
+// ============================================================
+// RENDER RESUME (Left Panel)
+// ============================================================
+function renderResume() {
+  const container = document.getElementById('resume-content');
+  const d = RESUME_DATA;
+
+  // — Header with photo + name + contact
+  const initials = d.name.split(' ').map(w => w[0]).join('');
+  container.innerHTML = `
+    <div class="resume-header">
+      <div class="photo-circle" id="photo-holder">
+        <img src="photo.jpg" alt="${escapeHTML(d.name)}" id="photo-img">
+        <span class="initials">${escapeHTML(initials)}</span>
+      </div>
+      <div class="header-info">
+        <h1>${escapeHTML(d.name)}</h1>
+        <div class="title-text">${escapeHTML(d.title)}</div>
+        <div class="contact-row">
+          ${d.contact.email ? `<a href="mailto:${d.contact.email}">✉ ${escapeHTML(d.contact.email)}</a>` : ''}
+          ${d.contact.linkedin ? `<a href="${d.contact.linkedin}" target="_blank" rel="noopener">◼ LinkedIn</a>` : ''}
+          ${d.contact.github ? `<a href="${d.contact.github}" target="_blank" rel="noopener">◻ GitHub</a>` : ''}
+          ${d.contact.website ? `<a href="${d.contact.website}" target="_blank" rel="noopener">◆ Website</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // — About
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">◆</span> About</div>
+      <div style="color: var(--text-muted); font-size: 14px; line-height: 1.7;">
+        ${d.bio.map(l => l || '<br>').join('\n')}
+      </div>
+    </div>
+  `;
+
+  // — Experience
+  let expHTML = d.experience.map((exp, i) => {
+    const bullets = exp.bullets.map(b => `<li>${escapeHTML(b)}</li>`).join('');
+    const divider = i < d.experience.length - 1 ? '<hr class="exp-divider">' : '';
+    return `
+      <div class="exp-entry">
+        <div class="exp-role">${escapeHTML(exp.role)}</div>
+        <div class="exp-meta">${escapeHTML(exp.company)} · ${escapeHTML(exp.period)} · ${escapeHTML(exp.location)}</div>
+        <ul class="exp-bullets">${bullets}</ul>
+      </div>
+      ${divider}
+    `;
+  }).join('');
+
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">▸</span> Experience</div>
+      ${expHTML}
+    </div>
+  `;
+
+  // — Projects
+  let projHTML = d.projects.map((proj, i) => {
+    const tags = proj.tech.split(',').map(t => `<span class="tech-tag">${escapeHTML(t.trim())}</span>`).join('');
+    const divider = i < d.projects.length - 1 ? '<hr class="exp-divider">' : '';
+    return `
+      <div class="proj-entry">
+        <div class="proj-name">${escapeHTML(proj.name)}</div>
+        <div class="proj-desc">${escapeHTML(proj.description)}</div>
+        <div class="proj-tech">${tags}</div>
+        ${proj.url ? `<a class="proj-link" href="${proj.url}" target="_blank" rel="noopener">→ ${proj.url}</a>` : ''}
+      </div>
+      ${divider}
+    `;
+  }).join('');
+
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">◈</span> Projects</div>
+      ${projHTML}
+    </div>
+  `;
+
+  // — Skills
+  let skillsHTML = Object.entries(d.skills).map(([cat, items]) => {
+    const chips = items.map(s => `<span class="skill-chip">${escapeHTML(s)}</span>`).join('');
+    return `
+      <div class="skill-group">
+        <div class="skill-category-label">${escapeHTML(cat)}</div>
+        <div class="skill-chips">${chips}</div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">⬡</span> Skills</div>
+      ${skillsHTML}
+    </div>
+  `;
+
+  // — Education
+  let eduHTML = d.education.map(edu => `
+    <div>
+      <div class="edu-degree">${escapeHTML(edu.degree)}</div>
+      <div class="edu-meta">${escapeHTML(edu.school)} · ${escapeHTML(edu.period)}</div>
+      ${edu.details ? `<div class="edu-details">${escapeHTML(edu.details)}</div>` : ''}
+    </div>
+  `).join('');
+
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">◇</span> Education</div>
+      ${eduHTML}
+    </div>
+  `;
+
+  // — Contact
+  let contactHTML = '';
+  if (d.contact.email) contactHTML += `<div class="contact-detail-row"><span class="contact-label">Email</span><span class="contact-value"><a href="mailto:${d.contact.email}">${escapeHTML(d.contact.email)}</a></span></div>`;
+  if (d.contact.linkedin) contactHTML += `<div class="contact-detail-row"><span class="contact-label">LinkedIn</span><span class="contact-value"><a href="${d.contact.linkedin}" target="_blank" rel="noopener">${d.contact.linkedin}</a></span></div>`;
+  if (d.contact.github) contactHTML += `<div class="contact-detail-row"><span class="contact-label">GitHub</span><span class="contact-value"><a href="${d.contact.github}" target="_blank" rel="noopener">${d.contact.github}</a></span></div>`;
+  if (d.contact.website) contactHTML += `<div class="contact-detail-row"><span class="contact-label">Website</span><span class="contact-value"><a href="${d.contact.website}" target="_blank" rel="noopener">${d.contact.website}</a></span></div>`;
+
+  container.innerHTML += `
+    <div class="section-card">
+      <div class="section-card-header"><span class="section-icon">◉</span> Contact</div>
+      ${contactHTML}
+    </div>
+  `;
+
+  // Photo fallback: hide initials if image loads
+  const img = document.getElementById('photo-img');
+  if (img) {
+    img.onload = () => img.classList.add('loaded');
+    img.onerror = () => img.style.display = 'none';
+  }
+}
+
+// ============================================================
+// CHAT ENGINE
+// ============================================================
+const SUGGESTED_QUESTIONS = [
+  "Why product management?",
+  "What's your superpower?",
+  "Tell me about AI",
+  "Why should we hire you?"
+];
+
+let chatInitialized = false;
+
+function initChat() {
+  if (chatInitialized) return;
+  chatInitialized = true;
+  showWelcomeMessage('chat-messages');
+  showWelcomeMessage('chat-messages-mobile');
+}
+
+function showWelcomeMessage(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  // Welcome message
+  const welcome = document.createElement('div');
+  welcome.className = 'msg msg-bot';
+  welcome.textContent = "Hi! I'm Mohit's resume assistant. Ask me anything — or pick a question below.";
+  container.appendChild(welcome);
+
+  // Suggested question chips
+  const chips = document.createElement('div');
+  chips.className = 'suggested-chips';
+  SUGGESTED_QUESTIONS.forEach(q => {
+    const btn = document.createElement('button');
+    btn.className = 'suggest-chip';
+    btn.textContent = q;
+    btn.addEventListener('click', () => handleChatSend(q, containerId));
+    chips.appendChild(btn);
+  });
+  container.appendChild(chips);
+}
+
+function findAnswer(query) {
+  const tokens = query.toLowerCase().split(/\s+/);
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const pair of RESUME_DATA.qaPairs) {
+    let score = 0;
+    for (const token of tokens) {
+      for (const keyword of pair.keywords) {
+        if (keyword.includes(token) || token.includes(keyword)) {
+          score += 1;
+        }
+      }
+    }
+    const normalized = score / Math.max(tokens.length, 1);
+    if (normalized > bestScore) {
+      bestScore = normalized;
+      bestMatch = pair;
+    }
+  }
+
+  if (bestMatch && bestScore >= 0.3) {
+    return bestMatch.answer;
+  }
+  return null;
+}
+
+async function handleChatSend(text, containerId) {
+  const messagesEl = document.getElementById(containerId);
+  if (!messagesEl) return;
+  const query = text.trim();
+  if (!query) return;
+
+  // Remove suggested chips (only first set)
+  const existingChips = messagesEl.querySelectorAll('.suggested-chips');
+  existingChips.forEach(c => c.remove());
+
+  // User message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'msg msg-user';
+  userMsg.textContent = query;
+  messagesEl.appendChild(userMsg);
+  scrollChat(messagesEl);
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+  typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  messagesEl.appendChild(typing);
+  scrollChat(messagesEl);
+
+  // Brief delay to simulate thinking
+  await sleep(800 + Math.random() * 600);
+
+  // Remove typing indicator
+  typing.remove();
+
+  // Bot response
+  const answer = findAnswer(query);
+  const botMsg = document.createElement('div');
+  botMsg.className = 'msg msg-bot';
+
+  if (answer) {
+    botMsg.textContent = answer;
+  } else {
+    botMsg.innerHTML = `I don't have a specific answer for that. Try asking about:`;
+    const fallbackChips = document.createElement('div');
+    fallbackChips.className = 'suggested-chips';
+    const fallbackTopics = ["Management style", "Technical background", "Why PM?", "Strengths"];
+    fallbackTopics.forEach(q => {
+      const btn = document.createElement('button');
+      btn.className = 'suggest-chip';
+      btn.textContent = q;
+      btn.addEventListener('click', () => handleChatSend(q, containerId));
+      fallbackChips.appendChild(btn);
+    });
+    botMsg.appendChild(fallbackChips);
+  }
+
+  messagesEl.appendChild(botMsg);
+  scrollChat(messagesEl);
+}
+
+function scrollChat(el) {
+  el.scrollTop = el.scrollHeight;
+}
+
+// Wire up desktop chat input
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+
+sendBtn.addEventListener('click', () => {
+  const val = chatInput.value;
+  chatInput.value = '';
+  handleChatSend(val, 'chat-messages');
+});
+
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const val = chatInput.value;
+    chatInput.value = '';
+    handleChatSend(val, 'chat-messages');
+  }
+});
+
+// Wire up mobile chat input
+const chatInputMobile = document.getElementById('chat-input-mobile');
+const sendBtnMobile = document.getElementById('send-btn-mobile');
+
+sendBtnMobile.addEventListener('click', () => {
+  const val = chatInputMobile.value;
+  chatInputMobile.value = '';
+  handleChatSend(val, 'chat-messages-mobile');
+});
+
+chatInputMobile.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    const val = chatInputMobile.value;
+    chatInputMobile.value = '';
+    handleChatSend(val, 'chat-messages-mobile');
+  }
+});
+
+// Mobile FAB + bottom sheet
+const chatFab = document.getElementById('chat-fab');
+const chatSheet = document.getElementById('chat-sheet');
+const chatSheetOverlay = document.getElementById('chat-sheet-overlay');
+const sheetClose = document.getElementById('sheet-close');
+
+chatFab.addEventListener('click', () => {
+  chatSheet.classList.add('open');
+  chatSheetOverlay.classList.add('open');
+  chatInputMobile.focus();
+});
+
+function closeSheet() {
+  chatSheet.classList.remove('open');
+  chatSheetOverlay.classList.remove('open');
+}
+
+sheetClose.addEventListener('click', closeSheet);
+chatSheetOverlay.addEventListener('click', closeSheet);
+
+// ============================================================
+// INITIALIZE
+// ============================================================
+renderResume();
+bootSequence();
+</script>
+</body>
+</html>
