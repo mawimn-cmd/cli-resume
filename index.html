@@ -1418,25 +1418,33 @@ function findAnswer(query) {
   if (sectionAnswer) return sectionAnswer;
 
   // 3. Q&A keyword scoring (for questions that don't match a section)
+  // Filter stop words so generic tokens like "tell", "about", "me" don't inflate scores
+  const STOP_WORDS = new Set(['tell', 'me', 'about', 'a', 'an', 'the', 'is', 'are', 'was', 'were',
+    'be', 'do', 'does', 'did', 'have', 'has', 'had', 'will', 'would', 'could', 'should', 'can',
+    'may', 'might', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'and', 'or',
+    'but', 'not', 'no', 'so', 'if', 'what', 'which', 'how', 'when', 'where', 'why',
+    'i', 'you', 'your', 'my', 'we', 'they', 'he', 'she', 'it', 'this', 'that']);
+  const contentTokens = tokens.filter(t => !STOP_WORDS.has(t) && t.length > 2);
+
   let bestMatch = null;
   let bestScore = 0;
-  if (RESUME_DATA.qaPairs) {
+  if (RESUME_DATA.qaPairs && contentTokens.length > 0) {
     for (const pair of RESUME_DATA.qaPairs) {
       let score = 0;
-      for (const token of tokens) {
+      for (const token of contentTokens) {
         for (const keyword of pair.keywords) {
           if (tokenMatchesKeyword(token, keyword)) {
             score += 1;
           }
         }
       }
-      const normalized = score / Math.max(tokens.length, 1);
+      const normalized = score / Math.max(contentTokens.length, 1);
       if (normalized > bestScore) {
         bestScore = normalized;
         bestMatch = pair;
       }
     }
-    if (bestMatch && bestScore >= 0.25) {
+    if (bestMatch && bestScore >= 0.3) {
       return bestMatch.answer;
     }
   }
