@@ -3,8 +3,6 @@
 Terminal-inspired resume with cinematic intro and AI chatbot.
 Zero dependencies. One file. Fully static.
 
-## Demo
-[Live demo link]
 
 ## Quick Start
 
