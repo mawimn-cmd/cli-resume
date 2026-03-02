@@ -41,26 +41,21 @@
     "Program Management": [
       "Program Management",
       "Agile Project Management",
-      "Iteration Planning",
+      "Product Management",
       "Product Operations",
       "Release Management",
       "Product Launch",
       "Business Analysis",
-      "Stakeholder Management"
+      "Iteration Planning"
     ],
     "Technical Stack": [
+      "Claude code",
       "MS Excel",
       "SQL",
-      "Power BI",
       "Jira",
       "ADO",
       "Notion",
-      "Confluence",
-      "Claude code"
-    ],
-    "Languages": [
-      "English (Fluent)",
-      "Deutsch (B1)"
+      "Confluence"
     ]
   },
   "education": [
@@ -79,7 +74,8 @@
   ],
   "contact": {
     "linkedin": "linkedin.com/in/mohit-gupta-64339624",
-    "github": "https://github.com/mawimn-cmd"
+    "github": "https://github.com/mawimn-cmd",
+    "scheduling": "https://calendly.com/mawimn/30min"
   },
   "qaPairs": [
     {
@@ -133,18 +129,6 @@
         "urgent"
       ],
       "answer": "Prioritize work  that would affect the key KPIS. Delegate where possible."
-    },
-    {
-      "question": "How do you handle conflict?",
-      "keywords": [
-        "conflict",
-        "disagree",
-        "disagreement",
-        "argument",
-        "tension",
-        "difficult"
-      ],
-      "answer": "Conflict is another opportunity to align better. If there is a conflict we need to acknowledge there is a conflict, understand the other perspective and find a joint solution"
     },
     {
       "question": "What are your long-term career goals?",
