@@ -1051,9 +1051,8 @@ function renderQaQuestion() {
   const nextBtn = document.getElementById('qa-next-btn');
 
   if (qaIndex >= QA_QUESTIONS.length) {
-    // Done with Q&A — move to deploy
-    finishQa();
-    return;
+    // If navigating back, show the last question instead of bouncing forward
+    qaIndex = QA_QUESTIONS.length - 1;
   }
 
   qEl.textContent = QA_QUESTIONS[qaIndex];
@@ -1075,14 +1074,22 @@ function qaNext() {
     };
   }
   qaIndex++;
-  renderQaQuestion();
+  if (qaIndex >= QA_QUESTIONS.length) {
+    finishQa();
+  } else {
+    renderQaQuestion();
+  }
 }
 
 function qaSkip() {
   // Remove any previous answer for this question
   qaAnswers[qaIndex] = null;
   qaIndex++;
-  renderQaQuestion();
+  if (qaIndex >= QA_QUESTIONS.length) {
+    finishQa();
+  } else {
+    renderQaQuestion();
+  }
 }
 
 function finishQa() {
