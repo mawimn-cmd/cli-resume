@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CLI Resume — Setup Wizard</title>
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --purple: #A855F7;
+      --purple-glow: rgba(168, 85, 247, 0.3);
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --cyan: #06b6d4;
+      --font: Consolas, Monaco, 'Courier New', monospace;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       LAYOUT
+       ============================================================ */
+    .wizard-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      min-height: 100vh;
+    }
+
+    .wizard-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .wizard-header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--purple);
+      text-shadow: 0 0 16px var(--purple-glow);
+      letter-spacing: 2px;
+    }
+
+    .wizard-header p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* Step indicator */
+    .step-indicator {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    .step-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .step-dot.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      box-shadow: 0 0 8px var(--purple-glow);
+    }
+
+    .step-dot.done {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    /* Steps */
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .step-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .step-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 24px;
+    }
+
+    /* Form elements */
+    label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+
+    textarea, input[type="text"], input[type="password"], input[type="url"] {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 8px;
+      padding: 12px 14px;
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+      margin-bottom: 16px;
+    }
+
+    textarea:focus, input[type="text"]:focus, input[type="password"]:focus, input[type="url"]:focus {
+      border-color: var(--purple);
+    }
+
+    textarea::placeholder, input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.5;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 200px;
+    }
+
+    .help-link {
+      color: var(--cyan);
+      text-decoration: none;
+      font-size: 12px;
+    }
+
+    .help-link:hover { color: var(--purple); }
+
+    .note-text {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: -8px;
+      margin-bottom: 16px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 10px 24px;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: var(--purple);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #9333ea; }
+
+    .btn-primary:disabled {
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--purple);
+      color: var(--purple);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    /* Loading spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Error message */
+    .error-msg {
+      color: var(--red);
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .error-msg.visible { display: block; }
+
+    .success-msg {
+      color: var(--green);
+      font-size: 13px;
+      margin-top: 8px;
+      display: none;
+    }
+
+    .success-msg.visible { display: block; }
+
+    /* ============================================================
+       STEP 2: Review
+       ============================================================ */
+    .review-card {
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-left: 3px solid var(--purple);
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+
+    .review-card h3 {
+      color: var(--purple);
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .review-item {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .review-item span {
+      color: var(--text);
+    }
+
+    .json-editor {
+      display: none;
+      margin-top: 16px;
+    }
+
+    .json-editor.visible { display: block; }
+
+    .json-editor textarea {
+      min-height: 400px;
+      font-size: 12px;
+    }
+
+    /* ============================================================
+       STEP 3: Q&A
+       ============================================================ */
+    .qa-progress {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .qa-progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--surface);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .qa-progress-fill {
+      height: 100%;
+      background: var(--purple);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .qa-progress-label {
+      color: var(--text-muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .qa-question {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .qa-textarea {
+      min-height: 120px;
+    }
+
+    /* ============================================================
+       STEP 4: Deploy
+       ============================================================ */
+    .deploy-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .deploy-options { grid-template-columns: 1fr; }
+    }
+
+    .deploy-card {
+      background: var(--surface);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .deploy-card h3 {
+      color: var(--purple);
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .deploy-card .deploy-subtitle {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .deploy-card label {
+      margin-top: 8px;
+    }
+
+    .deploy-success {
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .deploy-success h2 {
+      color: var(--green);
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .deploy-success p {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .deploy-success a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    .deploy-success a:hover { color: var(--purple); }
+  </style>
+</head>
+<body>
+
+<div class="wizard-container">
+  <div class="wizard-header">
+    <h1>CLI RESUME SETUP</h1>
+    <p>Parse your resume with AI, answer recruiter questions, and deploy</p>
+  </div>
+
+  <!-- Step indicator dots -->
+  <div class="step-indicator">
+    <div class="step-dot active" id="dot-0"></div>
+    <div class="step-dot" id="dot-1"></div>
+    <div class="step-dot" id="dot-2"></div>
+    <div class="step-dot" id="dot-3"></div>
+  </div>
+
+  <!-- ============================================================
+       STEP 1: Resume Input
+       ============================================================ -->
+  <div class="step active" id="step-0">
+    <div class="step-title">Step 1: Paste Your Resume</div>
+    <div class="step-desc">Paste your resume text below. The AI will extract structured data from it.</div>
+
+    <label for="resume-text">Resume text</label>
+    <textarea id="resume-text" placeholder="Paste your full resume text here..."></textarea>
+
+    <label for="api-key">Gemini API Key</label>
+    <input type="password" id="api-key" placeholder="AIzaSy...">
+    <p class="note-text">
+      Your API key is only used client-side in your browser. It is never stored or sent anywhere else.
+      <br><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="help-link">Get a free API key →</a>
+    </p>
+
+    <div class="error-msg" id="step1-error"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="parse-btn" onclick="parseResume()">Parse Resume</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STEP 2: Review Parsed Data
+       ============================================================ -->
+  <div class="step" id="step-1">
+    <div class="step-title">Step 2: Review Parsed Data</div>
+    <div class="step-desc">Here's what the AI extracted. Review and edit if needed.</div>
+
+    <div id="review-content"></div>
+
+    <div class="json-editor" id="json-editor">
+      <label for="json-edit-area">Edit JSON</label>
+      <textarea id="json-edit-area" class="json-editor-textarea"></textarea>
+      <div class="error-msg" id="json-error"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveJsonEdit()">Save Changes</button>
+        <button class="btn btn-secondary" onclick="toggleJsonEditor()">Cancel</button>
+      </div>
+    </div>
+
+    <div class="error-msg" id="step2-error"></div>
+
+    <div class="btn-row" id="step2-buttons">
+      <button class="btn btn-primary" onclick="goToStep(2)">Looks good, next →</button>
+      <button class="btn btn-secondary" onclick="toggleJsonEditor()">Edit JSON</button>
+      <button class="btn btn-secondary" onclick="goToStep(0)">← Back</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STEP 3: Q&A Data Bank
+       ============================================================ -->
+  <div class="step" id="step-2">
+    <div class="step-title">Step 3: Answer Recruiter Questions</div>
+    <div class="step-desc">Type your answers in your own voice. Skip any you don't want to include.</div>
+
+    <div class="qa-progress">
+      <div class="qa-progress-bar">
+        <div class="qa-progress-fill" id="qa-progress-fill"></div>
+      </div>
+      <span class="qa-progress-label" id="qa-progress-label">Question 1 of 20</span>
+    </div>
+
+    <div class="qa-question" id="qa-question-text"></div>
+
+    <textarea id="qa-answer" class="qa-textarea" placeholder="Type your answer..."></textarea>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="qa-next-btn" onclick="qaNext()">Next →</button>
+      <button class="btn btn-secondary" onclick="qaSkip()">Skip</button>
+      <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STEP 4: Deploy
+       ============================================================ -->
+  <div class="step" id="step-3">
+    <div class="step-title">Step 4: Deploy Your Resume</div>
+    <div class="step-desc">Push directly to GitHub or download the data file.</div>
+
+    <div id="deploy-form">
+      <div class="deploy-options">
+        <!-- Option A: GitHub -->
+        <div class="deploy-card">
+          <h3>Option A: Push to GitHub</h3>
+          <p class="deploy-subtitle">Recommended — auto-deploy to your repo</p>
+
+          <label for="gh-repo">Repository URL</label>
+          <input type="url" id="gh-repo" placeholder="https://github.com/user/cli-resume">
+
+          <label for="gh-token">Personal Access Token</label>
+          <input type="password" id="gh-token" placeholder="ghp_...">
+          <p class="note-text">
+            Needs "repo" scope.
+            <a href="https://github.com/settings/tokens/new?scopes=repo&description=CLI+Resume+Setup" target="_blank" rel="noopener" class="help-link">Create a token →</a>
+          </p>
+
+          <div class="error-msg" id="gh-error"></div>
+          <div class="success-msg" id="gh-success"></div>
+
+          <button class="btn btn-primary" id="deploy-gh-btn" onclick="deployToGitHub()">Deploy to GitHub</button>
+        </div>
+
+        <!-- Option B: Download -->
+        <div class="deploy-card">
+          <h3>Option B: Download</h3>
+          <p class="deploy-subtitle">Download and add to your repo manually</p>
+
+          <button class="btn btn-primary" onclick="downloadDataJson()" style="margin-bottom: 10px;">Download data.json</button>
+          <br>
+          <button class="btn btn-secondary" onclick="copyDataJson()">Copy JSON to Clipboard</button>
+
+          <div class="success-msg" id="copy-success"></div>
+
+          <p class="note-text" style="margin-top: 16px; margin-bottom: 0;">
+            Place data.json next to index.html in your repo.
+          </p>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+      </div>
+    </div>
+
+    <div class="deploy-success" id="deploy-success" style="display:none;">
+      <h2>Deployed!</h2>
+      <p>Your resume data has been pushed to GitHub.</p>
+      <p style="margin-top: 12px;">
+        <a href="" id="pages-url" target="_blank" rel="noopener">View your live resume →</a>
+      </p>
+      <p style="margin-top: 8px; color: var(--text-muted); font-size: 12px;">
+        Make sure GitHub Pages is enabled: Settings → Pages → main branch → Save
+      </p>
+      <div class="btn-row" style="justify-content: center; margin-top: 20px;">
+        <a href="index.html" class="btn btn-primary" style="text-decoration: none;">Preview locally →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let currentStep = 0;
+let parsedData = null;
+let qaIndex = 0;
+const qaAnswers = [];
+
+const QA_QUESTIONS = [
+  "Tell me about yourself",
+  "Why did you choose this career path?",
+  "What's your management/leadership style?",
+  "What's your greatest strength?",
+  "Tell me about a failure or mistake you learned from",
+  "How do you prioritize work?",
+  "How do you handle disagreements or conflict?",
+  "How do you work with engineers/cross-functional teams?",
+  "How do you measure success?",
+  "What are you looking for in your next role?",
+  "What's your approach to AI/emerging technology?",
+  "How do you handle stakeholder management?",
+  "What's your design/UX philosophy?",
+  "Why should we hire you?",
+  "What tools and workflows do you prefer?",
+  "How do you make decisions with incomplete data?",
+  "Describe a project you're most proud of",
+  "What are your hobbies or interests outside work?",
+  "Remote, hybrid, or in-office preference?",
+  "What questions do you have for us?"
+];
+
+// Pre-defined keyword maps for Q&A questions
+const QA_KEYWORDS = [
+  ["yourself", "about", "who", "introduction", "intro", "summary", "tell"],
+  ["career", "path", "chose", "choose", "why", "journey"],
+  ["management", "leadership", "style", "lead", "manage", "team"],
+  ["strength", "greatest", "best", "superpower", "strongest", "good"],
+  ["failure", "mistake", "fail", "learned", "lesson", "wrong"],
+  ["prioritize", "priority", "prioritization", "work", "roadmap", "decide"],
+  ["disagreement", "conflict", "disagree", "handle", "argument", "difficult"],
+  ["engineer", "cross-functional", "collaborate", "developers", "engineering", "teams"],
+  ["measure", "success", "metrics", "kpi", "okr", "track", "data"],
+  ["looking", "next", "role", "opportunity", "want", "seeking", "ideal"],
+  ["ai", "emerging", "technology", "artificial", "intelligence", "llm", "machine"],
+  ["stakeholder", "management", "executive", "alignment", "influence"],
+  ["design", "ux", "philosophy", "user experience", "ui", "usability"],
+  ["hire", "why you", "candidate", "bring", "value", "offer"],
+  ["tools", "workflows", "software", "stack", "prefer", "tooling"],
+  ["decisions", "incomplete", "data", "uncertainty", "ambiguity", "tradeoff"],
+  ["project", "proud", "achievement", "accomplishment", "built", "shipped"],
+  ["hobbies", "interests", "outside", "fun", "personal", "free time"],
+  ["remote", "hybrid", "office", "location", "onsite", "work from"],
+  ["questions", "ask", "interviewer", "company", "curious"]
+];
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goToStep(n) {
+  // Mark previous steps as done
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    const step = document.getElementById(`step-${i}`);
+    dot.classList.remove('active', 'done');
+    step.classList.remove('active');
+
+    if (i < n) dot.classList.add('done');
+    if (i === n) {
+      dot.classList.add('active');
+      step.classList.add('active');
+    }
+  }
+  currentStep = n;
+
+  // If entering Q&A step, show current question
+  if (n === 2) renderQaQuestion();
+
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// STEP 1: Parse Resume with Gemini
+// ============================================================
+async function parseResume() {
+  const resumeText = document.getElementById('resume-text').value.trim();
+  const apiKey = document.getElementById('api-key').value.trim();
+  const errorEl = document.getElementById('step1-error');
+  const btn = document.getElementById('parse-btn');
+
+  errorEl.classList.remove('visible');
+
+  if (!resumeText) {
+    errorEl.textContent = 'Please paste your resume text.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  if (!apiKey) {
+    errorEl.textContent = 'Please enter your Gemini API key.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Parsing...';
+
+  const prompt = `You are a resume parser. Extract structured data from the resume below.
+
+Return a JSON object with exactly this schema:
+{
+  "name": "Full Name",
+  "title": "Professional Title (e.g., Product Manager, Software Engineer)",
+  "bio": ["Array of 3-5 sentences describing this person professionally"],
+  "experience": [
+    { "role": "Title", "company": "Company", "period": "Start — End", "location": "City/Remote", "bullets": ["Achievement 1", "Achievement 2", "Achievement 3"] }
+  ],
+  "projects": [
+    { "name": "Name", "description": "1-sentence description", "tech": "comma-separated tech", "url": "" }
+  ],
+  "skills": {
+    "Category Name": ["skill1", "skill2"]
+  },
+  "education": [
+    { "degree": "Degree", "school": "School", "period": "Year — Year", "details": "Notable info" }
+  ],
+  "contact": { "email": "", "linkedin": "", "github": "", "website": "" }
+}
+
+Rules:
+- Extract ALL experience entries, ordered most recent first
+- Group skills into 3-5 logical categories
+- For bio, write in third person perspective
+- Leave contact fields empty string if not found in resume
+- For projects, include any mentioned; leave url empty if not provided
+
+Resume:
+---
+${resumeText}
+---`;
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json'
+          }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `API error: ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) throw new Error('No response from AI. Try again.');
+
+    parsedData = JSON.parse(text);
+
+    // Ensure qaPairs array exists
+    if (!parsedData.qaPairs) parsedData.qaPairs = [];
+
+    renderReview();
+    goToStep(1);
+  } catch (err) {
+    errorEl.textContent = `Error: ${err.message}`;
+    errorEl.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Parse Resume';
+  }
+}
+
+// ============================================================
+// STEP 2: Review Parsed Data
+// ============================================================
+function renderReview() {
+  const container = document.getElementById('review-content');
+  const d = parsedData;
+
+  container.innerHTML = `
+    <div class="review-card">
+      <h3>Identity</h3>
+      <div class="review-item">Name: <span>${escapeHTML(d.name || '')}</span></div>
+      <div class="review-item">Title: <span>${escapeHTML(d.title || '')}</span></div>
+      <div class="review-item">Bio: <span>${(d.bio || []).length} lines</span></div>
+    </div>
+    <div class="review-card">
+      <h3>Experience (${(d.experience || []).length} entries)</h3>
+      ${(d.experience || []).map(e => `<div class="review-item"><span>${escapeHTML(e.role)}</span> at ${escapeHTML(e.company)} · ${escapeHTML(e.period)}</div>`).join('')}
+    </div>
+    <div class="review-card">
+      <h3>Skills (${Object.values(d.skills || {}).flat().length} total)</h3>
+      ${Object.entries(d.skills || {}).map(([cat, items]) => `<div class="review-item"><span>${escapeHTML(cat)}:</span> ${items.map(s => escapeHTML(s)).join(', ')}</div>`).join('')}
+    </div>
+    <div class="review-card">
+      <h3>Projects (${(d.projects || []).length})</h3>
+      ${(d.projects || []).map(p => `<div class="review-item"><span>${escapeHTML(p.name)}</span> — ${escapeHTML(p.description)}</div>`).join('')}
+    </div>
+    <div class="review-card">
+      <h3>Education (${(d.education || []).length})</h3>
+      ${(d.education || []).map(e => `<div class="review-item"><span>${escapeHTML(e.degree)}</span> — ${escapeHTML(e.school)}</div>`).join('')}
+    </div>
+    <div class="review-card">
+      <h3>Contact</h3>
+      <div class="review-item">Email: <span>${escapeHTML(d.contact?.email || '(not found)')}</span></div>
+      <div class="review-item">LinkedIn: <span>${escapeHTML(d.contact?.linkedin || '(not found)')}</span></div>
+      <div class="review-item">GitHub: <span>${escapeHTML(d.contact?.github || '(not found)')}</span></div>
+    </div>
+  `;
+}
+
+function toggleJsonEditor() {
+  const editor = document.getElementById('json-editor');
+  const buttons = document.getElementById('step2-buttons');
+
+  if (editor.classList.contains('visible')) {
+    editor.classList.remove('visible');
+    buttons.style.display = 'flex';
+  } else {
+    document.getElementById('json-edit-area').value = JSON.stringify(parsedData, null, 2);
+    editor.classList.add('visible');
+    buttons.style.display = 'none';
+  }
+}
+
+function saveJsonEdit() {
+  const errorEl = document.getElementById('json-error');
+  errorEl.classList.remove('visible');
+
+  try {
+    const edited = JSON.parse(document.getElementById('json-edit-area').value);
+    parsedData = edited;
+    if (!parsedData.qaPairs) parsedData.qaPairs = [];
+    renderReview();
+    toggleJsonEditor();
+  } catch (err) {
+    errorEl.textContent = `Invalid JSON: ${err.message}`;
+    errorEl.classList.add('visible');
+  }
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ============================================================
+// STEP 3: Q&A Data Bank
+// ============================================================
+function renderQaQuestion() {
+  const qEl = document.getElementById('qa-question-text');
+  const aEl = document.getElementById('qa-answer');
+  const progressFill = document.getElementById('qa-progress-fill');
+  const progressLabel = document.getElementById('qa-progress-label');
+  const nextBtn = document.getElementById('qa-next-btn');
+
+  if (qaIndex >= QA_QUESTIONS.length) {
+    // Done with Q&A — move to deploy
+    finishQa();
+    return;
+  }
+
+  qEl.textContent = QA_QUESTIONS[qaIndex];
+  aEl.value = qaAnswers[qaIndex]?.answer || '';
+  aEl.placeholder = 'Type your answer...';
+  progressFill.style.width = `${((qaIndex) / QA_QUESTIONS.length) * 100}%`;
+  progressLabel.textContent = `Question ${qaIndex + 1} of ${QA_QUESTIONS.length}`;
+  nextBtn.textContent = qaIndex === QA_QUESTIONS.length - 1 ? 'Finish →' : 'Next →';
+  aEl.focus();
+}
+
+function qaNext() {
+  const answer = document.getElementById('qa-answer').value.trim();
+  if (answer) {
+    qaAnswers[qaIndex] = {
+      question: QA_QUESTIONS[qaIndex],
+      keywords: QA_KEYWORDS[qaIndex],
+      answer: answer
+    };
+  }
+  qaIndex++;
+  renderQaQuestion();
+}
+
+function qaSkip() {
+  // Remove any previous answer for this question
+  qaAnswers[qaIndex] = null;
+  qaIndex++;
+  renderQaQuestion();
+}
+
+function finishQa() {
+  // Build qaPairs from answered questions
+  const qaPairs = qaAnswers.filter(a => a !== null && a !== undefined);
+  parsedData.qaPairs = qaPairs;
+  goToStep(3);
+}
+
+// ============================================================
+// STEP 4: Deploy
+// ============================================================
+function getFinalData() {
+  return JSON.stringify(parsedData, null, 2);
+}
+
+function downloadDataJson() {
+  const blob = new Blob([getFinalData()], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function copyDataJson() {
+  try {
+    await navigator.clipboard.writeText(getFinalData());
+    const el = document.getElementById('copy-success');
+    el.textContent = 'Copied to clipboard!';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 3000);
+  } catch {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = getFinalData();
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    const el = document.getElementById('copy-success');
+    el.textContent = 'Copied to clipboard!';
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 3000);
+  }
+}
+
+async function deployToGitHub() {
+  const repoUrl = document.getElementById('gh-repo').value.trim();
+  const token = document.getElementById('gh-token').value.trim();
+  const errorEl = document.getElementById('gh-error');
+  const successEl = document.getElementById('gh-success');
+  const btn = document.getElementById('deploy-gh-btn');
+
+  errorEl.classList.remove('visible');
+  successEl.classList.remove('visible');
+
+  if (!repoUrl) {
+    errorEl.textContent = 'Please enter your repository URL.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  if (!token) {
+    errorEl.textContent = 'Please enter your Personal Access Token.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  // Parse owner/repo from URL
+  const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/\s]+)/);
+  if (!match) {
+    errorEl.textContent = 'Invalid GitHub URL. Expected: https://github.com/user/repo';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const owner = match[1];
+  const repo = match[2].replace(/\.git$/, '');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Deploying...';
+
+  try {
+    // Check if data.json already exists to get SHA
+    let existingSha = null;
+    try {
+      const getResp = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/contents/data.json`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (getResp.ok) {
+        const existing = await getResp.json();
+        existingSha = existing.sha;
+      }
+    } catch {}
+
+    // PUT to create/update
+    const body = {
+      message: 'Update resume data via setup wizard',
+      content: btoa(unescape(encodeURIComponent(getFinalData())))
+    };
+    if (existingSha) body.sha = existingSha;
+
+    const putResp = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/contents/data.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }
+    );
+
+    if (!putResp.ok) {
+      const errData = await putResp.json().catch(() => ({}));
+      throw new Error(errData.message || `GitHub API error: ${putResp.status}`);
+    }
+
+    // Show success
+    const pagesUrl = `https://${owner}.github.io/${repo}`;
+    document.getElementById('pages-url').href = pagesUrl;
+    document.getElementById('pages-url').textContent = pagesUrl;
+    document.getElementById('deploy-form').style.display = 'none';
+    document.getElementById('deploy-success').style.display = 'block';
+  } catch (err) {
+    errorEl.textContent = `Error: ${err.message}`;
+    errorEl.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Deploy to GitHub';
+  }
+}
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Mohit Gupta — Resume</title>
+  <title>CLI Resume</title>
   <style>
     *, *::before, *::after {
       margin: 0;
@@ -34,6 +34,74 @@
       line-height: 1.6;
       overflow: hidden;
     }
+
+    /* ============================================================
+       SETUP REQUIRED SCREEN
+       ============================================================ */
+    #setup-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+
+    #setup-screen.visible {
+      display: flex;
+    }
+
+    #setup-screen h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--purple);
+      text-shadow: 0 0 20px var(--purple-glow), 0 0 40px var(--purple-glow);
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+    }
+
+    #setup-screen .setup-subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 32px;
+    }
+
+    #setup-screen .setup-option {
+      margin-bottom: 16px;
+    }
+
+    #setup-screen .setup-btn {
+      display: inline-block;
+      padding: 12px 28px;
+      background: var(--purple);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    #setup-screen .setup-btn:hover { background: #9333ea; }
+    #setup-screen .setup-btn:active { transform: scale(0.97); }
+
+    #setup-screen .setup-alt {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    #setup-screen .setup-alt a {
+      color: var(--cyan);
+      text-decoration: none;
+    }
+
+    #setup-screen .setup-alt a:hover { color: var(--purple); }
 
     /* ============================================================
        BOOT SCREEN
@@ -711,14 +779,26 @@
 <body>
 
 <!-- ============================================================
+     SETUP REQUIRED SCREEN (shown when data.json is missing)
+     ============================================================ -->
+<div id="setup-screen">
+  <h1>WELCOME TO CLI RESUME</h1>
+  <p class="setup-subtitle">Your terminal-style resume is almost ready.</p>
+  <div class="setup-option">
+    <a href="setup.html" class="setup-btn">Run Setup Wizard</a>
+  </div>
+  <p class="setup-alt">Or copy <a href="data.example.json">data.example.json</a> to data.json and edit manually</p>
+</div>
+
+<!-- ============================================================
      BOOT SCREEN OVERLAY
      ============================================================ -->
 <div id="boot-screen">
   <div id="boot-text"><span class="cursor-blink">█</span></div>
   <div id="boot-spinner"></div>
   <div id="boot-name">
-    <h1>MOHIT GUPTA</h1>
-    <p>Product Manager & Builder</p>
+    <h1 id="boot-name-text"></h1>
+    <p id="boot-title-text"></p>
   </div>
   <div id="boot-skip">Click or press any key to skip</div>
 </div>
@@ -736,8 +816,8 @@
   <!-- RIGHT — Chat Panel (desktop) -->
   <div id="chat-panel">
     <div class="chat-header">
-      <h2>Chat with Mohit</h2>
-      <p>Ask me anything about my experience</p>
+      <h2 id="chat-header-title">Chat</h2>
+      <p id="chat-header-subtitle">Ask me anything about my experience</p>
     </div>
     <div class="chat-messages" id="chat-messages"></div>
     <div class="chat-input-area">
@@ -755,8 +835,8 @@
 <div id="chat-sheet">
   <div class="sheet-handle-bar" id="sheet-close"><div class="handle"></div></div>
   <div class="chat-header">
-    <h2>Chat with Mohit</h2>
-    <p>Ask me anything about my experience</p>
+    <h2 id="chat-header-title-mobile">Chat</h2>
+    <p id="chat-header-subtitle-mobile">Ask me anything about my experience</p>
   </div>
   <div class="chat-messages" id="chat-messages-mobile"></div>
   <div class="chat-input-area">
@@ -767,172 +847,9 @@
 
 <script>
 // ============================================================
-// RESUME DATA
+// RESUME DATA — loaded from data.json
 // ============================================================
-const RESUME_DATA = {
-  name: "Mohit Gupta",
-  title: "Product Manager & Builder",
-  bio: [
-    "Product manager who builds. I combine product strategy with",
-    "hands-on technical skills to ship products that matter.",
-    "",
-    "I believe the best PMs understand the full stack — from user",
-    "research to system architecture. I write code, run experiments,",
-    "and make data-driven decisions.",
-    "",
-    "Currently exploring the intersection of AI and product development."
-  ],
-  experience: [
-    {
-      role: "Product Manager",
-      company: "Company Name",
-      period: "2023 — Present",
-      location: "Location",
-      bullets: [
-        "Led product strategy for [product/feature]",
-        "Shipped [key deliverable] resulting in [metric]",
-        "Collaborated with engineering team of [N] to deliver [outcome]"
-      ]
-    },
-    {
-      role: "Previous Role",
-      company: "Previous Company",
-      period: "2021 — 2023",
-      location: "Location",
-      bullets: [
-        "Owned roadmap for [product area]",
-        "Drove [X]% improvement in [metric]",
-        "Launched [feature] serving [N] users"
-      ]
-    }
-  ],
-  projects: [
-    {
-      name: "CLI Resume",
-      description: "Interactive terminal-style resume (you're looking at it)",
-      tech: "HTML, CSS, JavaScript",
-      url: "https://github.com/mohitgupta"
-    },
-    {
-      name: "Project Name",
-      description: "Brief description of what this project does",
-      tech: "Tech stack used",
-      url: "https://github.com/mohitgupta"
-    }
-  ],
-  skills: {
-    "Product": ["Product Strategy", "Roadmapping", "User Research", "A/B Testing", "PRDs", "OKRs"],
-    "Technical": ["JavaScript", "Python", "HTML/CSS", "SQL", "Git", "APIs"],
-    "Tools": ["Jira", "Figma", "Amplitude", "Mixpanel", "Notion", "Miro"],
-    "AI/ML": ["Prompt Engineering", "LLM Integration", "Claude API", "Gemini API"]
-  },
-  education: [
-    {
-      degree: "Degree Name",
-      school: "University Name",
-      period: "Year — Year",
-      details: "Relevant coursework or achievements"
-    }
-  ],
-  contact: {
-    email: "email@example.com",
-    linkedin: "https://linkedin.com/in/mohitgupta",
-    github: "https://github.com/mohitgupta",
-    website: ""
-  },
-  qaPairs: [
-    {
-      question: "What's your management style?",
-      keywords: ["management", "style", "lead", "leadership", "manage", "team"],
-      answer: "I lead with context, not control. I set clear goals, share the 'why' behind decisions, and trust the team to find the best path. I default to transparency and async communication."
-    },
-    {
-      question: "Why product management?",
-      keywords: ["why", "product", "pm", "career", "chose", "choose"],
-      answer: "I love the intersection of technology, business, and user needs. Product management lets me solve real problems while thinking strategically about what to build and why."
-    },
-    {
-      question: "What's your technical background?",
-      keywords: ["technical", "background", "coding", "engineer", "programming", "code", "developer"],
-      answer: "I'm a PM who codes. I build tools and prototypes to validate ideas faster. This helps me collaborate effectively with engineers and make better technical trade-off decisions."
-    },
-    {
-      question: "How do you prioritize?",
-      keywords: ["prioritize", "priority", "roadmap", "decide", "framework", "prioritization"],
-      answer: "I use a combination of impact/effort scoring, user research data, and business objectives. I'm a fan of the Opportunity Solution Tree for connecting outcomes to opportunities to solutions."
-    },
-    {
-      question: "What are you looking for?",
-      keywords: ["looking", "want", "next", "role", "opportunity", "ideal", "seeking"],
-      answer: "A product role where I can own meaningful outcomes, work with talented engineers, and ship products that users genuinely love. Bonus points for AI/ML product work."
-    },
-    {
-      question: "Tell me about a failure.",
-      keywords: ["failure", "fail", "mistake", "wrong", "learned", "lesson"],
-      answer: "I once shipped a feature based on stakeholder requests without validating with users first. It saw low adoption. The lesson: always validate assumptions with real users before building."
-    },
-    {
-      question: "How do you work with engineers?",
-      keywords: ["engineer", "engineering", "developers", "collaborate", "work with", "technical"],
-      answer: "I write clear specs, participate in design reviews, and respect engineering estimates. I never throw requirements over the wall — I pair on problem definition and trade-off discussions."
-    },
-    {
-      question: "What's your superpower?",
-      keywords: ["superpower", "strength", "best", "strongest", "good at", "excel"],
-      answer: "Bridging the gap between business strategy and technical execution. I can go from user interview to PRD to prototype in the same week. This speed of iteration helps teams learn faster."
-    },
-    {
-      question: "How do you measure success?",
-      keywords: ["measure", "success", "metrics", "kpi", "okr", "track", "data"],
-      answer: "Every feature needs a success metric defined before development. I set leading indicators (engagement, activation) and lagging indicators (retention, revenue) with clear targets."
-    },
-    {
-      question: "What tools do you use?",
-      keywords: ["tools", "software", "stack", "use", "workflow", "tooling"],
-      answer: "Product: Jira, Notion, Miro, Figma\nAnalytics: Amplitude, Mixpanel, SQL\nTechnical: VS Code, Git, Python, JavaScript\nAI: Claude, Gemini API, prompt engineering"
-    },
-    {
-      question: "How do you handle stakeholders?",
-      keywords: ["stakeholder", "executive", "alignment", "politics", "influence", "communication"],
-      answer: "Radical transparency + data. I share context early and often, use data to support recommendations, and always tie requests back to user outcomes and business goals."
-    },
-    {
-      question: "What's your approach to AI products?",
-      keywords: ["ai", "artificial", "intelligence", "llm", "machine", "learning", "gpt", "claude"],
-      answer: "Start with the user problem, not the technology. AI is a capability, not a product. I focus on where AI creates step-function improvements in user experience, not incremental features."
-    },
-    {
-      question: "Can you tell me about yourself?",
-      keywords: ["yourself", "about", "who", "introduction", "intro", "summary"],
-      answer: "Product manager who builds. I combine strategic thinking with hands-on technical skills. I've shipped products across multiple domains, and I'm passionate about using technology to solve real problems."
-    },
-    {
-      question: "What are your hobbies?",
-      keywords: ["hobby", "hobbies", "fun", "free time", "outside", "interests", "personal"],
-      answer: "When I'm not building products, you'll find me exploring new technologies, reading about cognitive science, and tinkering with side projects. I believe curiosity is a superpower."
-    },
-    {
-      question: "Why should we hire you?",
-      keywords: ["hire", "why you", "candidate", "bring", "value", "offer"],
-      answer: "Three reasons:\n1. I ship — I bias toward action and learning over analysis paralysis\n2. I build — I can prototype and validate ideas before full investment\n3. I think — I connect user needs to business outcomes systematically"
-    },
-    {
-      question: "How do you handle conflict?",
-      keywords: ["conflict", "disagree", "disagreement", "argument", "difficult", "tension"],
-      answer: "I seek to understand before being understood. Most conflicts stem from misaligned context, not misaligned intent. I lay out the data, acknowledge trade-offs, and propose a way to test who's right."
-    },
-    {
-      question: "What's your design philosophy?",
-      keywords: ["design", "ux", "user experience", "ui", "interface", "usability"],
-      answer: "Simplicity is the ultimate sophistication. I advocate for removing features more often than adding them. Every interaction should feel obvious — if users need a tutorial, the design needs work."
-    },
-    {
-      question: "Remote or in-office?",
-      keywords: ["remote", "office", "hybrid", "location", "onsite", "work from"],
-      answer: "I'm effective in any setup. I've led remote teams with async-first communication and in-office teams with whiteboard sessions. What matters is clear communication and shared context."
-    }
-  ]
-};
+let RESUME_DATA = null;
 
 // ============================================================
 // HELPERS
@@ -943,6 +860,47 @@ function sleep(ms) {
 
 function escapeHTML(str) {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+async function loadData() {
+  try {
+    const resp = await fetch('data.json');
+    if (!resp.ok) throw new Error('Not found');
+    RESUME_DATA = await resp.json();
+    onDataLoaded();
+  } catch (e) {
+    showSetupScreen();
+  }
+}
+
+function showSetupScreen() {
+  document.getElementById('boot-screen').style.display = 'none';
+  document.getElementById('setup-screen').classList.add('visible');
+}
+
+function onDataLoaded() {
+  const d = RESUME_DATA;
+  const firstName = d.name.split(' ')[0];
+
+  // Dynamic page title
+  document.title = `${d.name} — Resume`;
+
+  // Dynamic boot screen name/title
+  document.getElementById('boot-name-text').textContent = d.name.toUpperCase();
+  document.getElementById('boot-title-text').textContent = d.title;
+
+  // Dynamic chat headers
+  document.getElementById('chat-header-title').textContent = `Chat with ${firstName}`;
+  document.getElementById('chat-header-subtitle').textContent = 'Ask me anything about my experience';
+  document.getElementById('chat-header-title-mobile').textContent = `Chat with ${firstName}`;
+  document.getElementById('chat-header-subtitle-mobile').textContent = 'Ask me anything about my experience';
+
+  // Render + boot
+  renderResume();
+  bootSequence();
 }
 
 // ============================================================
@@ -1173,14 +1131,14 @@ function renderResume() {
 // ============================================================
 // CHAT ENGINE
 // ============================================================
-const SUGGESTED_QUESTIONS = [
-  "Why product management?",
-  "What's your superpower?",
-  "Tell me about AI",
-  "Why should we hire you?"
-];
-
 let chatInitialized = false;
+
+function getSuggestedQuestions() {
+  if (!RESUME_DATA || !RESUME_DATA.qaPairs || RESUME_DATA.qaPairs.length === 0) {
+    return ["Tell me about yourself", "What are your skills?", "What's your experience?", "How can I contact you?"];
+  }
+  return RESUME_DATA.qaPairs.slice(0, 4).map(p => p.question);
+}
 
 function initChat() {
   if (chatInitialized) return;
@@ -1193,16 +1151,18 @@ function showWelcomeMessage(containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
+  const firstName = RESUME_DATA.name.split(' ')[0];
+
   // Welcome message
   const welcome = document.createElement('div');
   welcome.className = 'msg msg-bot';
-  welcome.textContent = "Hi! I'm Mohit's resume assistant. Ask me anything — or pick a question below.";
+  welcome.textContent = `Hi! I'm ${firstName}'s resume assistant. Ask me anything — or pick a question below.`;
   container.appendChild(welcome);
 
   // Suggested question chips
   const chips = document.createElement('div');
   chips.className = 'suggested-chips';
-  SUGGESTED_QUESTIONS.forEach(q => {
+  getSuggestedQuestions().forEach(q => {
     const btn = document.createElement('button');
     btn.className = 'suggest-chip';
     btn.textContent = q;
@@ -1212,30 +1172,98 @@ function showWelcomeMessage(containerId) {
   container.appendChild(chips);
 }
 
+// ============================================================
+// SECTION-AWARE CHAT FALLBACKS
+// ============================================================
+const SECTION_KEYWORDS = {
+  experience: ["experience", "work", "job", "role", "career", "company", "position", "worked"],
+  skills: ["skills", "tech", "stack", "know", "technologies", "proficient", "languages", "tools"],
+  education: ["education", "school", "degree", "study", "university", "college", "studied", "academic"],
+  projects: ["projects", "built", "portfolio", "build", "made", "created", "side project"],
+  contact: ["contact", "email", "reach", "connect", "linkedin", "github", "hire", "touch"],
+  about: ["about", "who", "yourself", "bio", "introduction", "tell me", "background", "summary"]
+};
+
+function sectionFallback(query) {
+  const lower = query.toLowerCase();
+  const d = RESUME_DATA;
+
+  // Check which section the query relates to
+  for (const [section, keywords] of Object.entries(SECTION_KEYWORDS)) {
+    const matched = keywords.some(kw => lower.includes(kw));
+    if (!matched) continue;
+
+    switch (section) {
+      case 'experience':
+        return d.experience.map(exp =>
+          `${exp.role} at ${exp.company} (${exp.period})\n${exp.bullets.map(b => `  • ${b}`).join('\n')}`
+        ).join('\n\n');
+
+      case 'skills':
+        return "Here are my skills:\n\n" + Object.entries(d.skills).map(([cat, items]) =>
+          `${cat}: ${items.join(', ')}`
+        ).join('\n');
+
+      case 'education':
+        return d.education.map(edu =>
+          `${edu.degree} — ${edu.school} (${edu.period})${edu.details ? '\n  ' + edu.details : ''}`
+        ).join('\n\n');
+
+      case 'projects':
+        return d.projects.map(proj =>
+          `${proj.name}: ${proj.description}${proj.tech ? '\n  Tech: ' + proj.tech : ''}${proj.url ? '\n  ' + proj.url : ''}`
+        ).join('\n\n');
+
+      case 'contact': {
+        const lines = [];
+        if (d.contact.email) lines.push(`Email: ${d.contact.email}`);
+        if (d.contact.linkedin) lines.push(`LinkedIn: ${d.contact.linkedin}`);
+        if (d.contact.github) lines.push(`GitHub: ${d.contact.github}`);
+        if (d.contact.website) lines.push(`Website: ${d.contact.website}`);
+        return "Here's how to reach me:\n\n" + lines.join('\n');
+      }
+
+      case 'about':
+        return d.bio.join('\n');
+    }
+  }
+
+  return null;
+}
+
 function findAnswer(query) {
   const tokens = query.toLowerCase().split(/\s+/);
   let bestMatch = null;
   let bestScore = 0;
 
-  for (const pair of RESUME_DATA.qaPairs) {
-    let score = 0;
-    for (const token of tokens) {
-      for (const keyword of pair.keywords) {
-        if (keyword.includes(token) || token.includes(keyword)) {
-          score += 1;
+  // Layer 1: Q&A pair keyword matching
+  if (RESUME_DATA.qaPairs) {
+    for (const pair of RESUME_DATA.qaPairs) {
+      let score = 0;
+      for (const token of tokens) {
+        for (const keyword of pair.keywords) {
+          if (keyword.includes(token) || token.includes(keyword)) {
+            score += 1;
+          }
         }
       }
+      const normalized = score / Math.max(tokens.length, 1);
+      if (normalized > bestScore) {
+        bestScore = normalized;
+        bestMatch = pair;
+      }
     }
-    const normalized = score / Math.max(tokens.length, 1);
-    if (normalized > bestScore) {
-      bestScore = normalized;
-      bestMatch = pair;
+
+    if (bestMatch && bestScore >= 0.3) {
+      return bestMatch.answer;
     }
   }
 
-  if (bestMatch && bestScore >= 0.3) {
-    return bestMatch.answer;
-  }
+  // Layer 2: Section-aware fallback
+  const sectionAnswer = sectionFallback(query);
+  if (sectionAnswer) return sectionAnswer;
+
+  // Layer 3: No match
   return null;
 }
 
@@ -1280,7 +1308,7 @@ async function handleChatSend(text, containerId) {
     botMsg.innerHTML = `I don't have a specific answer for that. Try asking about:`;
     const fallbackChips = document.createElement('div');
     fallbackChips.className = 'suggested-chips';
-    const fallbackTopics = ["Management style", "Technical background", "Why PM?", "Strengths"];
+    const fallbackTopics = ["Experience", "Skills", "Projects", "Education", "Contact"];
     fallbackTopics.forEach(q => {
       const btn = document.createElement('button');
       btn.className = 'suggest-chip';
@@ -1358,10 +1386,9 @@ sheetClose.addEventListener('click', closeSheet);
 chatSheetOverlay.addEventListener('click', closeSheet);
 
 // ============================================================
-// INITIALIZE
+// INITIALIZE — Load data first, then render
 // ============================================================
-renderResume();
-bootSequence();
+loadData();
 </script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+{
+  "name": "Your Name",
+  "title": "Your Title",
+  "bio": ["Line 1 of your bio", "Line 2 of your bio", "", "Line 4 after a blank line"],
+  "experience": [
+    {
+      "role": "Job Title",
+      "company": "Company Name",
+      "period": "2023 — Present",
+      "location": "City, Country",
+      "bullets": ["Achievement 1", "Achievement 2", "Achievement 3"]
+    },
+    {
+      "role": "Previous Job Title",
+      "company": "Previous Company",
+      "period": "2021 — 2023",
+      "location": "City, Country",
+      "bullets": ["Achievement 1", "Achievement 2"]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Project Name",
+      "description": "What it does in one sentence",
+      "tech": "JavaScript, Python, React",
+      "url": "https://github.com/you/project"
+    }
+  ],
+  "skills": {
+    "Category 1": ["Skill 1", "Skill 2", "Skill 3"],
+    "Category 2": ["Skill 4", "Skill 5"]
+  },
+  "education": [
+    {
+      "degree": "Degree Name",
+      "school": "University Name",
+      "period": "2018 — 2022",
+      "details": "Relevant coursework or achievements"
+    }
+  ],
+  "contact": {
+    "email": "you@email.com",
+    "linkedin": "https://linkedin.com/in/you",
+    "github": "https://github.com/you",
+    "website": ""
+  },
+  "qaPairs": [
+    {
+      "question": "Tell me about yourself",
+      "keywords": ["yourself", "about", "who", "introduction"],
+      "answer": "Your answer in first person"
+    }
+  ]
+}
