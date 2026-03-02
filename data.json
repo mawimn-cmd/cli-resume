@@ -79,7 +79,8 @@
   ],
   "contact": {
     "linkedin": "linkedin.com/in/mohit-gupta-64339624",
-    "github": "https://github.com/mawimn-cmd"
+    "github": "https://github.com/mawimn-cmd",
+    "scheduling": "https://calendly.com/mawimn/30min"
   },
   "qaPairs": [
     {
@@ -93,7 +94,7 @@
         "summary",
         "tell"
       ],
-      "answer": "AI enthusiast Delivery Lead experimenting with AI to create products that provide an alternative perspective or help solve a problem"
+      "answer": "AI enthusiast Delivery Lead who turns strategy into measurable outcomes while working at the intersection of Product, Engineering & Commercial teams."
     },
     {
       "question": "What are your strengths?",
@@ -105,7 +106,7 @@
         "strongest",
         "good"
       ],
-      "answer": "My biggest strengths are High agency and Growth mindset"
+      "answer": "I enthusiast Delivery Lead experimenting with AI to create products that provide an alternative perspective or help solve a problem"
     },
     {
       "question": "How do you handle feedback or criticism?",
@@ -122,19 +123,6 @@
       "answer": "I would put myself in other's shoe and would try to think from their perspective why was the feedback provided, ask clarifying questions and make a plan to address the gap or how to handle the root cause of the perspection"
     },
     {
-      "question": "How do you prioritize work?",
-      "keywords": [
-        "prioritize",
-        "priority",
-        "prioritization",
-        "work",
-        "roadmap",
-        "decide",
-        "urgent"
-      ],
-      "answer": "Prioritize work  that would affect the key KPIS. Delegate where possible."
-    },
-    {
       "question": "How do you handle conflict?",
       "keywords": [
         "conflict",
@@ -144,21 +132,8 @@
         "tension",
         "difficult"
       ],
-      "answer": "Conflict is another opportunity to align better. If there is a conflict we need to acknowledge there is a conflict, understand the other perspective and find a joint solution"
-    },
-    {
-      "question": "What are your long-term career goals?",
-      "keywords": [
-        "goals",
-        "career",
-        "long-term",
-        "future",
-        "ambition",
-        "growth",
-        "aspiration",
-        "vision"
-      ],
-      "answer": "Work on interesting AI products/projects that contribute to solving genuine problem"
+      "answer": "I would put myself in other's shoe and would try to think from their perspective why was the feedback provided, ask clarifying questions and make a plan to address the gap or how to handle the root cause of the perception"
     }
-  ]
+  ],
+  "theme": "orange"
 }
