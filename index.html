@@ -998,7 +998,10 @@ function escapeHTML(str) {
 // ============================================================
 async function loadData() {
   try {
-    const resp = await fetch('data.json');
+    const params = new URLSearchParams(window.location.search);
+    const version = params.get('v');
+    const dataFile = version ? `data-${version}.json` : 'data.json';
+    const resp = await fetch(dataFile);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     RESUME_DATA = await resp.json();
   } catch (e) {

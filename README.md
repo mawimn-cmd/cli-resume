@@ -27,6 +27,28 @@ Zero dependencies. One file. Fully static.
 ### Manual Setup
 Prefer to skip the wizard? Copy `data.example.json` to `data.json` and edit it manually.
 
+## Multi-Version Support
+
+Tailor your resume per target role — a PM version highlights stakeholder alignment, while an SWE version emphasizes system design.
+
+### Create a version
+1. In the setup wizard (Step 2), enter a **version name** (e.g. `pm`, `swe`, `startup`)
+2. Deploy or download — the file is saved as `data-{name}.json` (e.g. `data-pm.json`)
+
+### View a version
+Add `?v=` to your URL:
+- **Default:** `https://username.github.io/cli-resume/`
+- **PM version:** `https://username.github.io/cli-resume/?v=pm`
+- **SWE version:** `https://username.github.io/cli-resume/?v=swe`
+
+### Edit a version
+Open the setup wizard with both params:
+`setup.html?edit=true&v=pm`
+
+This loads `data-pm.json`, pre-fills the version name, and lets you update and redeploy.
+
+> Leave the version name blank to use the default `data.json` — existing behavior is unchanged.
+
 ## Customization
 - **Photo**: Add `photo.jpg` to the repo root
 - **Colors**: Edit CSS variables in `index.html`

@@ -613,6 +613,13 @@
     <div class="step-title">Step 2: Review Parsed Data</div>
     <div class="step-desc">Here's what the AI extracted. Review and edit if needed.</div>
 
+    <!-- Version name -->
+    <div style="margin-bottom: 16px;">
+      <label for="version-name">Version name (optional)</label>
+      <input type="text" id="version-name" placeholder="e.g. pm, swe, startup">
+      <p class="note-text">Creates data-{name}.json. Leave blank for default data.json.</p>
+    </div>
+
     <div id="review-content"></div>
 
     <!-- Photo upload -->
@@ -767,7 +774,7 @@
 
     <div class="deploy-success" id="deploy-success" style="display:none;">
       <h2>Deployed!</h2>
-      <p>Your resume data has been pushed to GitHub.</p>
+      <p id="deploy-success-msg">Your resume data has been pushed to GitHub.</p>
       <p style="margin-top: 12px;">
         <a href="" id="pages-url" target="_blank" rel="noopener">View your live resume →</a>
       </p>
@@ -1477,7 +1484,8 @@ function downloadDataJson() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'data.json';
+  const vName = document.getElementById('version-name').value.trim();
+  a.download = vName ? `data-${vName}.json` : 'data.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -1541,11 +1549,15 @@ async function deployToGitHub() {
   btn.innerHTML = '<span class="spinner"></span> Deploying...';
 
   try {
-    // Check if data.json already exists to get SHA
+    // Compute versioned target filename
+    const vName = document.getElementById('version-name').value.trim();
+    const targetFile = vName ? `data-${vName}.json` : 'data.json';
+
+    // Check if file already exists to get SHA
     let existingSha = null;
     try {
       const getResp = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/data.json`,
+        `https://api.github.com/repos/${owner}/${repo}/contents/${targetFile}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
       if (getResp.ok) {
@@ -1556,13 +1568,13 @@ async function deployToGitHub() {
 
     // PUT to create/update
     const body = {
-      message: 'Update resume data via setup wizard',
+      message: `Update ${targetFile} via setup wizard`,
       content: btoa(unescape(encodeURIComponent(getFinalData())))
     };
     if (existingSha) body.sha = existingSha;
 
     const putResp = await fetch(
-      `https://api.github.com/repos/${owner}/${repo}/contents/data.json`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${targetFile}`,
       {
         method: 'PUT',
         headers: {
@@ -1580,10 +1592,18 @@ async function deployToGitHub() {
 
     // Show success
     const pagesUrl = `https://${owner}.github.io/${repo}`;
-    document.getElementById('pages-url').href = pagesUrl;
-    document.getElementById('pages-url').textContent = pagesUrl;
+    const liveUrl = vName ? `${pagesUrl}/?v=${vName}` : pagesUrl;
+    document.getElementById('pages-url').href = liveUrl;
+    document.getElementById('pages-url').textContent = liveUrl;
+    document.getElementById('deploy-success-msg').textContent =
+      `${targetFile} has been pushed to GitHub.`;
     document.getElementById('deploy-form').style.display = 'none';
     document.getElementById('deploy-success').style.display = 'block';
+    // Update preview link with version param
+    const previewLink = document.querySelector('#deploy-success a.btn');
+    if (previewLink) {
+      previewLink.href = vName ? `index.html?v=${vName}` : 'index.html';
+    }
   } catch (err) {
     errorEl.textContent = `Error: ${err.message}`;
     errorEl.classList.add('visible');
@@ -1658,8 +1678,11 @@ async function checkEditMode() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('edit') || params.get('edit') !== 'true') return;
 
+  const version = params.get('v');
+  const dataFile = version ? `data-${version}.json` : 'data.json';
+
   try {
-    const resp = await fetch('data.json');
+    const resp = await fetch(dataFile);
     if (!resp.ok) return;
     const data = await resp.json();
 
@@ -1683,15 +1706,25 @@ async function checkEditMode() {
       }
     }
 
+    // Pre-fill version name input
+    if (version) {
+      document.getElementById('version-name').value = version;
+    }
+
     // Render review and jump to Step 2
     renderReview();
     goToStep(1);
   } catch {
-    // data.json not found, stay on Step 1
+    // data file not found, stay on Step 1
   }
 }
 
 checkEditMode();
+
+// Version name sanitization — lowercase, hyphens, alphanumeric only
+document.getElementById('version-name').addEventListener('input', (e) => {
+  e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+});
 </script>
 </body>
 </html>
