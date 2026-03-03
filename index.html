@@ -999,7 +999,8 @@ function escapeHTML(str) {
 async function loadData() {
   try {
     const params = new URLSearchParams(window.location.search);
-    const version = params.get('v');
+    const rawVersion = params.get('v');
+    const version = rawVersion ? rawVersion.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/^[-]+/, '') : null;
     const dataFile = version ? `data-${version}.json` : 'data.json';
     const resp = await fetch(dataFile);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);

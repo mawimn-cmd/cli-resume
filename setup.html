@@ -795,6 +795,11 @@
 let currentStep = 0;
 let parsedData = null;
 let qaIndex = 0;
+
+function sanitizeVersionName(v) {
+  if (!v) return '';
+  return v.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/^[-]+/, '');
+}
 const qaAnswers = [];
 
 const QA_QUESTIONS = [
@@ -1484,7 +1489,7 @@ function downloadDataJson() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  const vName = document.getElementById('version-name').value.trim();
+  const vName = sanitizeVersionName(document.getElementById('version-name').value);
   a.download = vName ? `data-${vName}.json` : 'data.json';
   a.click();
   URL.revokeObjectURL(url);
@@ -1550,7 +1555,7 @@ async function deployToGitHub() {
 
   try {
     // Compute versioned target filename
-    const vName = document.getElementById('version-name').value.trim();
+    const vName = sanitizeVersionName(document.getElementById('version-name').value);
     const targetFile = vName ? `data-${vName}.json` : 'data.json';
 
     // Check if file already exists to get SHA
@@ -1678,7 +1683,7 @@ async function checkEditMode() {
   const params = new URLSearchParams(window.location.search);
   if (!params.has('edit') || params.get('edit') !== 'true') return;
 
-  const version = params.get('v');
+  const version = sanitizeVersionName(params.get('v'));
   const dataFile = version ? `data-${version}.json` : 'data.json';
 
   try {
@@ -1723,7 +1728,7 @@ checkEditMode();
 
 // Version name sanitization — lowercase, hyphens, alphanumeric only
 document.getElementById('version-name').addEventListener('input', (e) => {
-  e.target.value = e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  e.target.value = sanitizeVersionName(e.target.value);
 });
 </script>
 </body>
