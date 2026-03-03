@@ -7,12 +7,17 @@ Zero dependencies. One file. Fully static.
 ## Quick Start
 
 1. **Fork** this repository
-2. **Open** `setup.html` in your browser
-3. **Paste** your resume text + free Gemini API key
-4. **Answer** 10 common interview questions (in your own words)
-5. **Deploy** directly to your repo — or download `data.json`
-6. **Enable GitHub Pages**: Settings → Pages → main branch → Save
-7. **Share** your link: `https://username.github.io/cli-resume`
+2. **Enable GitHub Pages** on your fork:
+   - Go to your fork → **Settings** → **Pages**
+   - Source: **Deploy from a branch** → Branch: `main` → Folder: `/ (root)` → **Save**
+   - Wait ~1 minute for the site to go live
+3. **Open the setup wizard**: `https://<your-username>.github.io/cli-resume/setup.html`
+4. **Paste** your resume text + free Gemini API key
+5. **Answer** 10 common interview questions (in your own words)
+6. **Deploy** directly to your repo — or download `data.json`
+7. **Share** your link: `https://<your-username>.github.io/cli-resume`
+
+> **Alternative:** Clone the repo locally and open `setup.html` directly in your browser (double-click the file — no server needed).
 
 ### Get a Gemini API Key (free)
 1. Go to https://aistudio.google.com/apikey

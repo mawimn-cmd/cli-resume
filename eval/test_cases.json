@@ -1,0 +1,199 @@
+{
+  "exact_match": [
+    {
+      "id": "exact_1",
+      "query": "Tell me about yourself",
+      "expected_layer": "exact",
+      "content_contains": "AI enthusiast"
+    },
+    {
+      "id": "exact_2",
+      "query": "What are your strengths?",
+      "expected_layer": "exact",
+      "content_contains": "High agency"
+    },
+    {
+      "id": "exact_3",
+      "query": "How do you handle feedback or criticism?",
+      "expected_layer": "exact",
+      "content_contains": "other's shoe"
+    },
+    {
+      "id": "exact_4",
+      "query": "How do you prioritize work?",
+      "expected_layer": "exact",
+      "content_contains": "key KPIS"
+    },
+    {
+      "id": "exact_5",
+      "query": "How do you handle conflict?",
+      "expected_layer": "exact",
+      "content_contains": "align better"
+    },
+    {
+      "id": "exact_6",
+      "query": "What are your long-term career goals?",
+      "expected_layer": "exact",
+      "content_contains": "AI products"
+    }
+  ],
+  "section": [
+    {
+      "id": "section_1",
+      "query": "Tell me about your experience",
+      "expected_layer": "section",
+      "content_contains": "Delivery Lead at Olympus"
+    },
+    {
+      "id": "section_2",
+      "query": "What are your skills?",
+      "expected_layer": "section",
+      "content_contains": "Program Management"
+    },
+    {
+      "id": "section_3",
+      "query": "What's your education?",
+      "expected_layer": "section",
+      "content_contains": "ESB Reutlingen"
+    },
+    {
+      "id": "section_4",
+      "query": "What projects have you built?",
+      "expected_layer": null,
+      "content_contains": null,
+      "note": "projects array is empty, sectionFallback returns empty string (falsy in JS)"
+    },
+    {
+      "id": "section_5",
+      "query": "How can I contact you?",
+      "expected_layer": "section",
+      "content_contains": "linkedin"
+    },
+    {
+      "id": "section_6",
+      "query": "Who are you?",
+      "expected_layer": "section",
+      "content_contains": "AI enthusiast"
+    },
+    {
+      "id": "section_7",
+      "query": "What job did you have at Zalando?",
+      "expected_layer": "section",
+      "content_contains": "Zalando"
+    },
+    {
+      "id": "section_8",
+      "query": "What tools do you use?",
+      "expected_layer": "section",
+      "content_contains": "Jira"
+    }
+  ],
+  "keyword": [
+    {
+      "id": "keyword_1",
+      "query": "What's your greatest superpower?",
+      "expected_layer": "keyword",
+      "content_contains": "High agency"
+    },
+    {
+      "id": "keyword_2",
+      "query": "How do you deal with criticism?",
+      "expected_layer": "keyword",
+      "content_contains": "shoe"
+    },
+    {
+      "id": "keyword_3",
+      "query": "What are your ambitions?",
+      "expected_layer": "keyword",
+      "content_contains": "AI products"
+    },
+    {
+      "id": "keyword_4",
+      "query": "How do you handle disagreements?",
+      "expected_layer": "keyword",
+      "content_contains": "align better"
+    },
+    {
+      "id": "keyword_5",
+      "query": "What's most urgent on your roadmap?",
+      "expected_layer": "keyword",
+      "content_contains": "key KPIS"
+    },
+    {
+      "id": "keyword_6",
+      "query": "What's your vision for the future?",
+      "expected_layer": "keyword",
+      "content_contains": "AI products"
+    }
+  ],
+  "no_match": [
+    {
+      "id": "nomatch_1",
+      "query": "What's your favorite color?",
+      "expected_layer": null,
+      "content_contains": null
+    },
+    {
+      "id": "nomatch_2",
+      "query": "Tell me about a failed project",
+      "expected_layer": null,
+      "content_contains": null
+    },
+    {
+      "id": "nomatch_3",
+      "query": "What's the weather like?",
+      "expected_layer": null,
+      "content_contains": null
+    },
+    {
+      "id": "nomatch_4",
+      "query": "",
+      "expected_layer": null,
+      "content_contains": null
+    }
+  ],
+  "regression": [
+    {
+      "id": "reg_1",
+      "query": "What are your strengths?",
+      "expected_layer": "exact",
+      "content_contains": "High agency",
+      "note": "Punctuation stripping: ? should not prevent exact match"
+    },
+    {
+      "id": "reg_2",
+      "query": "TELL ME ABOUT YOUR EXPERIENCE",
+      "expected_layer": "section",
+      "content_contains": "Delivery Lead at Olympus",
+      "note": "Case insensitive + section priority over Q&A keyword"
+    },
+    {
+      "id": "reg_3",
+      "query": "what are your skills",
+      "expected_layer": "section",
+      "content_contains": "Program Management",
+      "note": "Skills -> section fallback, not 'yourself' substring match"
+    },
+    {
+      "id": "reg_4",
+      "query": "tell me about a failed project",
+      "expected_layer": null,
+      "content_contains": null,
+      "note": "Stop words filter prevents bio match on 'tell me about'"
+    },
+    {
+      "id": "reg_5",
+      "query": "your",
+      "expected_layer": null,
+      "content_contains": null,
+      "note": "Short token 'your' must not match 'yourself' via substring"
+    },
+    {
+      "id": "reg_6",
+      "query": "Tell me about yourself",
+      "expected_layer": "exact",
+      "content_contains": "AI enthusiast",
+      "note": "Exact chip click still works after all fixes"
+    }
+  ]
+}
