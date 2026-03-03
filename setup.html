@@ -465,6 +465,35 @@
       min-height: 120px;
     }
 
+    .btn-ai-draft {
+      display: block;
+      width: 100%;
+      padding: 10px 24px;
+      background: transparent;
+      color: var(--purple);
+      border: 1px solid var(--purple);
+      border-radius: 8px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      margin-bottom: 8px;
+    }
+
+    .btn-ai-draft:hover {
+      background: rgba(168, 85, 247, 0.08);
+      box-shadow: 0 0 16px var(--purple-glow);
+    }
+
+    .btn-ai-draft:active { transform: scale(0.97); }
+
+    .btn-ai-draft.loading {
+      pointer-events: none;
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     /* ============================================================
        STEP 4: Deploy
        ============================================================ */
@@ -667,6 +696,11 @@
     <div class="qa-question" id="qa-question-text"></div>
 
     <textarea id="qa-answer" class="qa-textarea" placeholder="Type your answer..."></textarea>
+
+    <button class="btn-ai-draft" id="qa-draft-btn" onclick="draftAllWithAI()">
+      &#10024; Draft with AI
+    </button>
+    <div class="error-msg" id="qa-draft-error"></div>
 
     <div class="btn-row">
       <button class="btn btn-primary" id="qa-next-btn" onclick="qaNext()">Next →</button>
@@ -1247,6 +1281,116 @@ function escapeHTML(str) {
 // ============================================================
 // STEP 3: Q&A Data Bank
 // ============================================================
+async function draftAllWithAI() {
+  const apiKey = document.getElementById('api-key-step2').value.trim();
+  const btn = document.getElementById('qa-draft-btn');
+  const errorEl = document.getElementById('qa-draft-error');
+
+  errorEl.classList.remove('visible');
+
+  if (!apiKey) {
+    errorEl.textContent = 'API key required for AI drafting. Add it in Step 2.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  if (!parsedData) {
+    errorEl.textContent = 'No resume data found. Complete Step 1 first.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  btn.classList.add('loading');
+  btn.innerHTML = '<span class="spinner"></span> Drafting answers...';
+
+  const questionList = QA_QUESTIONS.map((q, i) => `${i + 1}. ${q}`).join('\n');
+
+  const prompt = `You are helping a job seeker prepare answers for common interview questions.
+Their resume data is provided below as JSON.
+
+Based on their experience, skills, and background, draft a short answer (3-4 sentences) for each question.
+
+Rules:
+- Write in first person ("I", "my")
+- Sound human and professional — like someone genuinely answering in a job interview
+- Reference specific details from their resume (company names, skills, achievements)
+- Adjust tone to match their experience level (senior = confident/strategic, junior = eager/growth-focused)
+- Tailor answers to their role type — e.g., a Product Manager should reference stakeholder alignment, roadmap prioritization, and user impact; an Engineer should reference technical decisions, system design, and debugging; a Designer should reference user research, iteration, and design rationale. Infer the role from their title and experience.
+- Do NOT use generic filler phrases like "I'm passionate about..." or "I thrive in..."
+- Keep each answer 3-4 sentences
+- For behavioral questions (starting with "Tell me about a time..." or asking for specific examples/stories), use the STAR method: briefly state the Situation, Task, Action, and Result. Don't label the sections — weave them naturally into the answer.
+
+Resume data:
+${JSON.stringify((() => { const { photo, geminiApiKey, ...ctx } = parsedData; return ctx; })())}
+
+Questions:
+${questionList}
+
+Return a JSON array of exactly ${QA_QUESTIONS.length} strings, one answer per question, in the same order.`;
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: 'application/json'
+          }
+        })
+      }
+    );
+
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `API error: ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!text) throw new Error('No response from AI. Try again.');
+
+    let answers;
+    try { answers = JSON.parse(text); } catch {
+      throw new Error('AI response was unexpected, try again.');
+    }
+
+    if (!Array.isArray(answers)) {
+      throw new Error('AI response was unexpected, try again.');
+    }
+
+    // Populate qaAnswers — pad or truncate to match QA_QUESTIONS length
+    for (let i = 0; i < QA_QUESTIONS.length; i++) {
+      const draft = (i < answers.length && typeof answers[i] === 'string') ? answers[i] : '';
+      if (draft) {
+        qaAnswers[i] = {
+          question: QA_QUESTIONS[i],
+          keywords: QA_KEYWORDS[i],
+          answer: draft
+        };
+      }
+    }
+
+    qaIndex = 0;
+    renderQaQuestion();
+
+    // Change button to re-draft state
+    btn.textContent = '\u2728 Re-draft with AI';
+
+  } catch (err) {
+    errorEl.textContent = `Error: ${err.message}`;
+    errorEl.classList.add('visible');
+  } finally {
+    btn.classList.remove('loading');
+    if (btn.innerHTML.includes('Drafting')) {
+      btn.innerHTML = '&#10024; Draft with AI';
+    }
+  }
+}
+
 function renderQaQuestion() {
   const qEl = document.getElementById('qa-question-text');
   const aEl = document.getElementById('qa-answer');
